@@ -6,14 +6,13 @@
  *
  */
 
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { FC, PropsWithChildren } from 'react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import type { TonConnectConnector } from '@ton/appkit';
 import { TONCONNECT_DEFAULT_CONNECTOR_ID } from '@ton/appkit';
 
 import { useConnectorById } from '../features/wallets/hooks/use-connector-by-id';
-import { useDefaultNetwork } from '../features/network';
 
 export interface TonConnectBridgeProps extends PropsWithChildren {
     connectorId?: string;
@@ -31,13 +30,6 @@ export const TonConnectBridge: FC<TonConnectBridgeProps> = ({
 }) => {
     const connector = useConnectorById(connectorId) as TonConnectConnector | undefined;
     const tonConnectUI = useMemo(() => connector?.tonConnectUI, [connector]);
-    const [defaultNetwork] = useDefaultNetwork();
-
-    useEffect(() => {
-        if (tonConnectUI) {
-            tonConnectUI.setConnectionNetwork(defaultNetwork?.chainId);
-        }
-    }, [tonConnectUI, defaultNetwork]);
 
     if (!tonConnectUI) {
         return <>{children}</>;

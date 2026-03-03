@@ -7,10 +7,11 @@
  */
 
 import { getJettonWalletAddressFromClient } from '@ton/walletkit';
-import type { Network, UserFriendlyAddress } from '@ton/walletkit';
+import type { UserFriendlyAddress } from '@ton/walletkit';
 
 import type { AppKit } from '../../core/app-kit';
 import { resolveNetwork } from '../../utils/network/resolve-network';
+import type { Network } from '../../types/network';
 
 export interface GetJettonWalletAddressOptions {
     jettonAddress: UserFriendlyAddress;

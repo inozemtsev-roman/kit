@@ -6,8 +6,7 @@
  *
  */
 
-import type { Network } from '@ton/walletkit';
-
+import type { Network } from '../../../types/network';
 import type { Emitter } from '../../emitter';
 import type { CONNECTOR_EVENTS, WALLETS_EVENTS, PLUGIN_EVENTS, NETWORKS_EVENTS } from '../constants/events';
 import type { WalletInterface } from '../../../types/wallet';

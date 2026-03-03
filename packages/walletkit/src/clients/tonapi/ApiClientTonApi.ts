@@ -49,6 +49,12 @@ import type { TonApiDnsResolveResponse, TonApiDnsBackresolveResponse } from './t
 import type { TonApiMethodExecutionResult } from './types/methods';
 import { mapTonApiGetMethodArgs, mapTonApiTvmStackRecord } from './mappers/map-methods';
 import { Base64ToBigInt, getNormalizedExtMessageHash } from '../../utils';
+
+/**
+ * @experimental
+ * This client implementation is experimental and currently has inconsistencies
+ * with the default Toncenter client. Some methods are not yet fully implemented.
+ */
 export class ApiClientTonApi extends BaseApiClient implements ApiClient {
     constructor(config: BaseApiClientConfig = {}) {
         let defaultEndpoint: string;

@@ -44,6 +44,9 @@ describe('Signing Hooks Examples', () => {
                 on: vi.fn().mockReturnValue(() => {}),
                 off: vi.fn(),
             },
+            networkManager: {
+                getDefaultNetwork: vi.fn(),
+            },
         };
     });
 

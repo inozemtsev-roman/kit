@@ -6,8 +6,7 @@
  *
  */
 
-import type { Network } from '@ton/walletkit';
-
+import type { Network } from '../../types/network';
 import type { AppKit } from '../../core/app-kit';
 
 export type SetDefaultNetworkParameters = {
@@ -25,5 +24,5 @@ export const setDefaultNetwork = (
     appKit: AppKit,
     parameters: SetDefaultNetworkParameters,
 ): SetDefaultNetworkReturnType => {
-    appKit.setDefaultNetwork(parameters.network);
+    appKit.networkManager.setDefaultNetwork(parameters.network);
 };

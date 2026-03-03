@@ -7,11 +7,12 @@
  */
 
 import { Address } from '@ton/core';
-import type { Jetton, JettonsResponse, Network } from '@ton/walletkit';
+import type { Jetton, JettonsResponse } from '@ton/walletkit';
 import { getJettonsFromClient, formatUnits } from '@ton/walletkit';
 
 import type { AppKit } from '../../core/app-kit';
 import { resolveNetwork } from '../../utils/network/resolve-network';
+import type { Network } from '../../types/network';
 
 export interface GetJettonsByAddressOptions {
     address: string | Address;

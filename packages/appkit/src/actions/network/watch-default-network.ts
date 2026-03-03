@@ -6,8 +6,7 @@
  *
  */
 
-import type { Network } from '@ton/walletkit';
-
+import type { Network } from '../../types/network';
 import type { AppKit } from '../../core/app-kit';
 import { getDefaultNetwork } from './get-default-network';
 import { NETWORKS_EVENTS } from '../../core/app-kit';

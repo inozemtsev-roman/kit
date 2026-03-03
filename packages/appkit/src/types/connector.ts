@@ -6,10 +6,10 @@
  *
  */
 
-import type { NetworkManager, Network } from '@ton/walletkit';
-
 import type { WalletInterface } from './wallet';
 import type { AppKitEmitter } from '../core/app-kit';
+import type { AppKitNetworkManager } from '../core/network';
+import type { Network } from './network';
 
 /**
  * Interface for wallet connectors
@@ -24,7 +24,7 @@ export interface Connector {
     readonly metadata: ConnectorMetadata;
 
     /** Initialize connector (restore connections, setup event listeners) */
-    initialize(emitter: AppKitEmitter, networkManager: NetworkManager): Promise<void>;
+    initialize(emitter: AppKitEmitter, networkManager: AppKitNetworkManager): Promise<void>;
 
     /** Cleanup connector resources */
     destroy(): void;

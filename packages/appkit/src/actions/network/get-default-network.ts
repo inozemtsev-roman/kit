@@ -6,8 +6,7 @@
  *
  */
 
-import type { Network } from '@ton/walletkit';
-
+import type { Network } from '../../types/network';
 import type { AppKit } from '../../core/app-kit';
 
 export type GetDefaultNetworkReturnType = Network | undefined;
@@ -16,5 +15,5 @@ export type GetDefaultNetworkReturnType = Network | undefined;
  * Get the current default network
  */
 export const getDefaultNetwork = (appKit: AppKit): GetDefaultNetworkReturnType => {
-    return appKit.getDefaultNetwork();
+    return appKit.networkManager.getDefaultNetwork();
 };

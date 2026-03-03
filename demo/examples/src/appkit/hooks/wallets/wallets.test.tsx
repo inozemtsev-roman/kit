@@ -98,7 +98,6 @@ describe('Wallet Hooks Examples', () => {
         };
 
         mockAppKit = {
-            getDefaultNetwork: vi.fn(),
             connectors: [mockConnector, mockConnector2, mockInjectedConnector, mockTonConnectConnector],
             walletsManager: {
                 selectedWallet: null,
@@ -108,6 +107,7 @@ describe('Wallet Hooks Examples', () => {
             emitter: mockEmitter,
             networkManager: {
                 getClient: vi.fn(),
+                getDefaultNetwork: vi.fn(),
             },
         };
     });

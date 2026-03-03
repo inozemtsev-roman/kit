@@ -6,18 +6,18 @@
  *
  */
 
-import type { NetworkManager } from '@ton/walletkit';
-import { Network, SwapManager } from '@ton/walletkit';
+import { SwapManager } from '@ton/walletkit';
 import type { Provider } from 'src/types/provider';
 
 import type { AppKitConfig } from '../types/config';
 import type { Connector } from '../../../types/connector';
 import { Emitter } from '../../emitter';
-import { CONNECTOR_EVENTS, WALLETS_EVENTS, NETWORKS_EVENTS } from '../constants/events';
+import { CONNECTOR_EVENTS, WALLETS_EVENTS } from '../constants/events';
 import type { AppKitEmitter, AppKitEvents } from '../types/events';
 import type { WalletInterface } from '../../../types/wallet';
 import { WalletsManager } from '../../wallets-manager';
-import { AppKitNetworkManager } from './app-kit-network-manager';
+import { AppKitNetworkManager } from '../../network';
+import { Network } from '../../../types/network';
 
 /**
  * Central hub for wallet management.
@@ -29,14 +29,11 @@ export class AppKit {
     readonly walletsManager: WalletsManager;
     readonly swapManager: SwapManager;
 
-    readonly networkManager: NetworkManager;
+    readonly networkManager: AppKitNetworkManager;
     readonly config: AppKitConfig;
-
-    private defaultNetwork: Network | undefined;
 
     constructor(config: AppKitConfig) {
         this.config = config;
-        this.defaultNetwork = config.defaultNetwork;
 
         this.emitter = new Emitter<AppKitEvents>();
         this.emitter.on(CONNECTOR_EVENTS.CONNECTED, this.updateWalletsFromConnectors.bind(this));
@@ -62,22 +59,6 @@ export class AppKit {
                 this.registerProvider(provider);
             });
         }
-    }
-
-    /**
-     * Get the current default network
-     */
-    getDefaultNetwork(): Network | undefined {
-        return this.defaultNetwork;
-    }
-
-    /**
-     * Set the default network for wallet connections.
-     * Emits a change event and propagates to all connectors.
-     */
-    setDefaultNetwork(network: Network | undefined): void {
-        this.defaultNetwork = network;
-        this.emitter.emit(NETWORKS_EVENTS.DEFAULT_CHANGED, { network }, 'appkit');
     }
 
     /**
