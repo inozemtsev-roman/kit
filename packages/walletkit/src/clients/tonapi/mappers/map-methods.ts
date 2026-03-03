@@ -13,16 +13,27 @@ import type { TonApiTvmStackRecord, TonApiExecGetMethodArg } from '../types/meth
  * Converts hex BOC string to base64 BOC string.
  * TonApi returns cells in hex format, but ParseStack expects base64.
  */
-function hexBocToBase64(hex: string): string {
+const hexBocToBase64 = (hex: string): string => {
     return Buffer.from(hex, 'hex').toString('base64');
-}
+};
 
+/**
+ * Maps standard TVM stack items to TonAPI POST execution arguments (`ExecGetMethodArg`).
+ *
+ * @see {@link https://github.com/tonkeeper/tonapi-js/blob/main/packages/ton-adapter/src/tonapi-adapter.ts#L231}
+ * This reference uses string serialization because it targets the GET endpoint (flat query parameters).
+ * We use the POST endpoint, which expects explicit JSON objects with strong typing (`cell_boc_base64`, `null` vs `Null`, `nan` vs `NaN`, etc.)
+ * according to the openapi specification (https://tonapi.io/api-v2).
+ */
 export const mapTonApiGetMethodArgs = (stack?: RawStackItem[]): TonApiExecGetMethodArg[] => {
     return (stack || []).map((item) => {
         switch (item.type) {
             case 'null':
-                return { type: 'null', value: '' };
+                return { type: 'null', value: 'Null' };
             case 'num':
+                if (item.value === 'NaN') {
+                    return { type: 'nan', value: 'NaN' };
+                }
                 // TonApi int257 expects 0x-prefixed hex, tinyint expects decimal
                 if (item.value.startsWith('0x') || item.value.startsWith('-0x')) {
                     return { type: 'int257', value: item.value };
