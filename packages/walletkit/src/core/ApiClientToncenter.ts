@@ -38,12 +38,6 @@ import { CallForSuccess } from '../utils/retry';
 import { globalLogger } from './Logger';
 import type { DNSRecordsResponseV3 } from '../types/toncenter/v3/DNSRecordsResponseV3';
 import { toDnsRecords } from '../types/toncenter/v3/DNSRecordsResponseV3';
-import {
-    DnsCategory,
-    dnsResolve,
-    ROOT_DNS_RESOLVER_MAINNET,
-    ROOT_DNS_RESOLVER_TESTNET,
-} from '../types/toncenter/dnsResolve';
 import { toAddressBook, toEvent } from '../types/toncenter/AccountEvent';
 import type {
     Base64String,
@@ -78,7 +72,6 @@ export class TonClientError extends Error {
 }
 
 export interface ApiClientConfig {
-    dnsResolver?: string;
     endpoint?: string;
     apiKey?: string;
     timeout?: number;
@@ -88,7 +81,6 @@ export interface ApiClientConfig {
 }
 
 export class ApiClientToncenter implements ApiClient {
-    private readonly dnsResolver: string;
     private readonly endpoint: string;
     private readonly apiKey?: string;
     private readonly timeout: number;
@@ -99,14 +91,11 @@ export class ApiClientToncenter implements ApiClient {
     constructor(config: ApiClientConfig = {}) {
         this.network = config.network;
 
-        const dnsResolver =
-            this.network?.chainId === Network.mainnet().chainId ? ROOT_DNS_RESOLVER_MAINNET : ROOT_DNS_RESOLVER_TESTNET;
         const defaultEndpoint =
             this.network?.chainId === Network.mainnet().chainId
                 ? 'https://toncenter.com'
                 : 'https://testnet.toncenter.com';
 
-        this.dnsResolver = config.dnsResolver ?? dnsResolver;
         this.endpoint = config.endpoint ?? defaultEndpoint;
         this.apiKey = config.apiKey;
         this.timeout = config.timeout ?? 30000;
@@ -397,10 +386,18 @@ export class ApiClientToncenter implements ApiClient {
     }
 
     async resolveDnsWallet(domain: string): Promise<string | null> {
-        const result = await dnsResolve(this, domain, DnsCategory.Wallet, this.dnsResolver);
-        if (result && result.value) {
-            return result.value;
+        const response = toDnsRecords(
+            await this.getJson<DNSRecordsResponseV3>('/api/v3/dns/records', {
+                domain,
+                limit: 1,
+                offset: 0,
+            }),
+        );
+
+        if (response.records.length > 0 && response.records[0].dnsWallet) {
+            return response.records[0].dnsWallet;
         }
+
         return null;
     }
 
@@ -408,6 +405,7 @@ export class ApiClientToncenter implements ApiClient {
         if (wallet instanceof Address) {
             wallet = wallet.toString();
         }
+
         const response = toDnsRecords(
             await this.getJson<DNSRecordsResponseV3>('/api/v3/dns/records', {
                 wallet,
@@ -415,9 +413,11 @@ export class ApiClientToncenter implements ApiClient {
                 offset: 0,
             }),
         );
+
         if (response.records.length > 0) {
             return response.records[0].domain;
         }
+
         return null;
     }
 
