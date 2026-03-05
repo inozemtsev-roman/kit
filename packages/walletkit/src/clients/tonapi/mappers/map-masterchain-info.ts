@@ -8,13 +8,14 @@
 
 import type { MasterchainInfo } from '../../../api/models';
 import type { TonApiMasterchainHeadResponse } from '../types/masterchain';
+import { asHex } from '../../../utils/hex';
 
 export function mapMasterchainInfo(rawResponse: TonApiMasterchainHeadResponse): MasterchainInfo {
     return {
         seqno: rawResponse.seqno,
         shard: rawResponse.shard,
         workchain: rawResponse.workchain_id,
-        fileHash: rawResponse.file_hash,
-        rootHash: rawResponse.root_hash,
+        fileHash: asHex(`0x${rawResponse.file_hash}`),
+        rootHash: asHex(`0x${rawResponse.root_hash}`),
     };
 }

@@ -6,6 +6,8 @@
  *
  */
 
+import type { Hex } from '../core/Primitives';
+
 /**
  * Information about the latest masterchain block.
  */
@@ -30,10 +32,10 @@ export interface MasterchainInfo {
     /**
      * File hash of the block
      */
-    fileHash: string;
+    fileHash: Hex;
 
     /**
      * Root hash of the block
      */
-    rootHash: string;
+    rootHash: Hex;
 }

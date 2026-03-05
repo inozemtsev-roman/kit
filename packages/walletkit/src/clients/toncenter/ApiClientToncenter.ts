@@ -455,8 +455,8 @@ export class ApiClientToncenter extends BaseApiClient implements ApiClient {
             workchain: raw.last.workchain,
             seqno: raw.last.seqno,
             shard: raw.last.shard,
-            fileHash: raw.last.file_hash,
-            rootHash: raw.last.root_hash,
+            fileHash: Base64ToHex(raw.last.file_hash),
+            rootHash: Base64ToHex(raw.last.root_hash),
         };
     }
 }
