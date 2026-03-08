@@ -27,8 +27,19 @@ import type {
     ConnectionApprovalResponse,
     SendTransactionRequestEvent,
     SignDataRequestEvent,
+    ApiClientConfig,
+    ApiClient,
+    SignatureDomain,
 } from '@ton/walletkit';
-import { MemoryStorageAdapter, Signer, WalletV4R2Adapter, WalletV5R1Adapter, TonWalletKit } from '@ton/walletkit';
+import {
+    MemoryStorageAdapter,
+    Signer,
+    WalletV4R2Adapter,
+    WalletV5R1Adapter,
+    TonWalletKit,
+    ApiClientToncenter,
+    ApiClientTonApi,
+} from '@ton/walletkit';
 import type { WalletAdapter } from '@ton/walletkit';
 
 import { SwiftStorageAdapter } from './SwiftStorageAdapter';
@@ -72,8 +83,35 @@ window.initWalletKit = async (configuration, storage, bridgeTransport, sessionMa
     const networks: NetworkAdapters = {};
     if (configuration.networkConfigurations) {
         for (const netConfig of configuration.networkConfigurations) {
+            if (netConfig.apiClientType === 'custom') {
+                continue;
+            }
+
+            let apiClient: ApiClientConfig | ApiClient | undefined;
+
+            if (netConfig.apiClientType === 'default') {
+                apiClient = netConfig.apiClientConfiguration;
+            } else if (netConfig.apiClientType === 'toncenter') {
+                apiClient = new ApiClientToncenter({
+                    dnsResolver: netConfig.apiClientConfiguration?.dnsResolver,
+                    endpoint: netConfig.apiClientConfiguration?.url,
+                    apiKey: netConfig.apiClientConfiguration?.key,
+                    timeout: netConfig.apiClientConfiguration?.timeout,
+                    network: netConfig.network,
+                    disableNetworkSend: netConfig.apiClientConfiguration?.disableNetworkSend,
+                });
+            } else if (netConfig.apiClientType === 'tonapi') {
+                apiClient = new ApiClientTonApi({
+                    endpoint: netConfig.apiClientConfiguration?.url,
+                    apiKey: netConfig.apiClientConfiguration?.key,
+                    timeout: netConfig.apiClientConfiguration?.timeout,
+                    network: netConfig.network,
+                    disableNetworkSend: netConfig.apiClientConfiguration?.disableNetworkSend,
+                });
+            }
+
             networks[netConfig.network.chainId] = {
-                apiClient: netConfig.apiClientConfiguration,
+                apiClient: apiClient,
             };
         }
     }
@@ -174,28 +212,28 @@ window.initWalletKit = async (configuration, storage, bridgeTransport, sessionMa
             console.log('🗑️ All event listeners removed');
         },
 
-        async createSignerFromMnemonic(mnemonic: string): Promise<WalletSigner> {
+        async createSignerFromMnemonic(mnemonic: string, domain?: SignatureDomain): Promise<WalletSigner> {
             if (!initialized) throw new Error('WalletKit Bridge not initialized');
 
-            console.log('➕ Bridge: Creating signer from mnemonic');
+            console.log('➕ Bridge: Creating signer from mnemonic and domain - ', domain);
 
             if (!mnemonic) {
                 throw new Error('Mnemonic is required to create signer');
             }
 
-            return await Signer.fromMnemonic(mnemonic, { type: 'ton' });
+            return await Signer.fromMnemonic(mnemonic, { type: 'ton' }, domain);
         },
 
-        async createSignerFromPrivateKey(privateKey: string): Promise<WalletSigner> {
+        async createSignerFromPrivateKey(privateKey: string, domain?: SignatureDomain): Promise<WalletSigner> {
             if (!initialized) throw new Error('WalletKit Bridge not initialized');
 
-            console.log('➕ Bridge: Creating signer from private key');
+            console.log('➕ Bridge: Creating signer from private key and domain - ', domain);
 
             if (!privateKey) {
                 throw new Error('Private key is required to create signer');
             }
 
-            return await Signer.fromPrivateKey(privateKey);
+            return await Signer.fromPrivateKey(privateKey, domain);
         },
 
         async createV4R2WalletAdapter(

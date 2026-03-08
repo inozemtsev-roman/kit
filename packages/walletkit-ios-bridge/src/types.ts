@@ -45,7 +45,11 @@ export interface SwiftWalletKitConfiguration extends ReusedTonWalletKitOptions {
         apiClientConfiguration?: {
             url?: string;
             key: string;
+            timeout?: number;
+            disableNetworkSend?: boolean;
+            dnsResolver?: string;
         };
+        apiClientType: 'default' | 'toncenter' | 'tonapi' | 'custom';
     }[];
     eventsConfiguration?: TonWalletKitOptions['eventProcessor'];
 }
