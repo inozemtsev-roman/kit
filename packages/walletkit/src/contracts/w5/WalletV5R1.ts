@@ -6,8 +6,8 @@
  *
  */
 
-import type { Address, Cell, Contract, Sender, ContractProvider, AccountStatus } from '@ton/core';
-import { beginCell, contractAddress, Dictionary, SendMode } from '@ton/core';
+import type { Address, Contract, Sender, ContractProvider, AccountStatus } from '@ton/core';
+import { beginCell, Cell, contractAddress, Dictionary, SendMode } from '@ton/core';
 
 import type { ApiClient } from '../../types/toncenter/ApiClient';
 import type { WalletOptions } from '../Wallet';
@@ -162,17 +162,12 @@ export class WalletV5 implements Contract {
     }
 
     get seqno() {
-        return this.client.runGetMethod(asAddressFriendly(this.address), 'seqno').then((data) => {
-            if (data.exitCode === 0) {
-                const parsedStack = ParseStack(data.stack);
-                if (parsedStack[0]?.type === 'int') {
-                    return Number(parsedStack[0].value);
-                } else {
-                    throw new Error('Stack is not an int');
-                }
-            } else {
+        return this.client.getAccountState(asAddressFriendly(this.address)).then((state) => {
+            if (state.status === 'non-existing' || state.status === 'uninitialized' || !state.data) {
                 return 0;
             }
+            const dataCell = Cell.fromBase64(state.data);
+            return dataCell.asSlice().skip(1).loadUint(32);
         });
     }
 
