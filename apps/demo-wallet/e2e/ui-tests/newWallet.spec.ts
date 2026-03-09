@@ -12,7 +12,7 @@ import { testWithUIFixture } from './UITestFixture';
 
 const test = testWithUIFixture();
 
-const PASSWORD = 'tester@1234';
+const PASSWORD = 'Tester@1234';
 
 test.describe('New Wallet Flow', () => {
     test.beforeEach(async ({ page }) => {
