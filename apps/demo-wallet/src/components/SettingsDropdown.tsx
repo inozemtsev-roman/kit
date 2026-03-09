@@ -282,7 +282,7 @@ export const SettingsDropdown: React.FC = () => {
                                         <div>
                                             <label className="text-sm font-medium text-gray-700">Show fast send</label>
                                             <p className="text-xs text-gray-500 mt-1">
-                                                Show &quot;Send to myself&quot; button on send screen (1 nano, no
+                                                Show &quot;Send Fast&quot; button on send screen (1 nano, no
                                                 confirmation)
                                             </p>
                                         </div>

@@ -60,7 +60,7 @@ export const DevelopmentToolsSection: FC = () => {
                     <View style={styles.info}>
                         <AppText style={styles.title}>Show fast send</AppText>
                         <AppText style={styles.description}>
-                            Show &quot;Send to myself&quot; button on send screen (1 nano, no confirmation)
+                            Show &quot;Send Fast&quot; button on send screen (1 nano, no confirmation)
                         </AppText>
                     </View>
                 </View>

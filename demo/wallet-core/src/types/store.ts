@@ -134,7 +134,7 @@ export interface TonConnectSlice {
 
     // Transaction request actions
     showTransactionRequest: (request: SendTransactionRequestEvent) => void;
-    approveTransactionRequest: () => Promise<void>;
+    approveTransactionRequest: () => Promise<{ signedBoc: string } | undefined>;
     rejectTransactionRequest: (reason?: string) => Promise<void>;
     closeTransactionModal: () => void;
 

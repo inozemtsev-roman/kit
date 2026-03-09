@@ -10,9 +10,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isValidAddress } from '@ton/walletkit';
 import type { Jetton, TONTransferRequest } from '@ton/walletkit';
-import { useWallet, useJettons, useWalletKit, useAuth } from '@demo/wallet-core';
+import { useWallet, useJettons, useWalletKit, useAuth, useWalletStore } from '@demo/wallet-core';
+import { toast } from 'sonner';
 
 import { Layout, Button, Input, Card } from '../components';
+import { getTransactionExplorerUrls } from '../utils/explorer-urls';
 import { createComponentLogger } from '../utils/logger';
 
 import { useFormattedJetton } from '@/hooks/useFormattedJetton';
@@ -37,6 +39,9 @@ export const SendTransaction: React.FC = () => {
     const navigate = useNavigate();
     const { balance, currentWallet, address } = useWallet();
     const { showFastSend } = useAuth();
+    const savedWallets = useWalletStore((state) => state.walletManagement.savedWallets);
+    const activeWalletId = useWalletStore((state) => state.walletManagement.activeWalletId);
+    const network = savedWallets.find((w) => w.id === activeWalletId)?.network ?? 'testnet';
     // Get current wallet
     const { userJettons, isLoadingJettons, loadUserJettons, formatJettonAmount } = useJettons();
 
@@ -188,30 +193,59 @@ export const SendTransaction: React.FC = () => {
         }
     };
 
-    const handleFastSendToMyself = async () => {
-        if (!currentWallet || !address) return;
+    const handleFastSend = async () => {
+        if (!currentWallet) return;
+        const recipientAddress = recipient.trim() || address;
+        if (!recipientAddress) return;
+        if (!isValidAddress(recipientAddress)) {
+            setError('Invalid recipient address');
+            return;
+        }
         setError('');
         setIsLoading(true);
         try {
+            let result;
             if (selectedToken.type === 'TON') {
                 const tonTransferParams: TONTransferRequest = {
-                    recipientAddress: address,
+                    recipientAddress: recipientAddress,
                     transferAmount: '1', // 1 nanotons
                 };
                 const tx = await currentWallet.createTransferTonTransaction(tonTransferParams);
-                await currentWallet.sendTransaction(tx);
+                result = await currentWallet.sendTransaction(tx);
             } else if (selectedToken.data) {
                 const jettonAmount = '1'; // 1 in smallest unit
                 const jettonTransaction = await currentWallet.createTransferJettonTransaction({
-                    recipientAddress: address,
+                    recipientAddress: recipientAddress,
                     jettonAddress: selectedToken.data.address,
                     transferAmount: jettonAmount,
                 });
-                await currentWallet.sendTransaction(jettonTransaction);
+                result = await currentWallet.sendTransaction(jettonTransaction);
             }
-            navigate('/wallet', {
-                state: { message: `${getCurrentTokenSymbol()} sent to yourself!` },
-            });
+            if (result?.normalizedHash) {
+                const { tonScan, tonViewer } = getTransactionExplorerUrls(result.normalizedHash, network);
+                toast.success('Transaction is sent to the network', {
+                    description: (
+                        <span className="flex gap-3 mt-1">
+                            <a
+                                href={tonScan}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline"
+                            >
+                                TonScan
+                            </a>
+                            <a
+                                href={tonViewer}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline"
+                            >
+                                TonViewer
+                            </a>
+                        </span>
+                    ),
+                });
+            }
         } catch (err) {
             log.error('Fast send error:', err);
             setError(err instanceof Error ? err.message : 'Failed to send');
@@ -510,13 +544,13 @@ export const SendTransaction: React.FC = () => {
                             <Button
                                 type="button"
                                 variant="secondary"
-                                onClick={handleFastSendToMyself}
+                                onClick={handleFastSend}
                                 isLoading={isLoading}
                                 disabled={isLoading}
                                 className="w-full"
-                                data-testid="send-to-myself"
+                                data-testid="send-fast"
                             >
-                                Send to myself
+                                Send Fast
                             </Button>
                         )}
 
