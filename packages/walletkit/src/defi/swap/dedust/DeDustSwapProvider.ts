@@ -61,7 +61,7 @@ const DEFAULT_PROTOCOLS = [
  *   referralFeeBps: 50 // 0.5%
  * });
  *
- * kit.swap.registerProvider('dedust', provider);
+ * kit.swap.registerProvider(provider);
  * ```
  */
 export class DeDustSwapProvider extends SwapProvider<DeDustProviderOptions, DeDustProviderOptions> {

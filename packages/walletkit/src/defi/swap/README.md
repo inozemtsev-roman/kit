@@ -18,7 +18,7 @@ const omnistonProvider = new OmnistonSwapProvider({
     quoteTimeoutMs: 10000,
 });
 
-kit.swap.registerProvider('omniston', omnistonProvider);
+kit.swap.registerProvider(omnistonProvider);
 kit.swap.setDefaultProvider('omniston');
 ```
 
