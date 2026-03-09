@@ -154,6 +154,7 @@ export function createWalletStore(options: CreateWalletStoreOptions = {}) {
                                 passwordHash: state.auth.passwordHash,
                                 persistPassword: state.auth.persistPassword,
                                 holdToSign: state.auth.holdToSign,
+                                showFastSend: state.auth.showFastSend,
                                 useWalletInterfaceType: state.auth.useWalletInterfaceType,
                                 ledgerAccountNumber: state.auth.ledgerAccountNumber,
                                 ...(state.auth.persistPassword && {

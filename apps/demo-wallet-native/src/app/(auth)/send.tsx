@@ -14,7 +14,7 @@ import { useMemo, useState } from 'react';
 import type { FC } from 'react';
 import { Alert, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { useWallet, useWalletKit } from '@demo/wallet-core';
+import { useWallet, useWalletKit, useAuth } from '@demo/wallet-core';
 
 import { ActiveTouchAction } from '@/core/components/active-touch-action';
 import { AmountInput } from '@/core/components/amount-input';
@@ -47,7 +47,8 @@ const SendScreen: FC = () => {
     const selectedJettonInfo = useFormattedJetton(selectedToken?.data);
 
     const walletKit = useWalletKit();
-    const { balance, currentWallet, savedWallets } = useWallet();
+    const { balance, currentWallet, savedWallets, address } = useWallet();
+    const { showFastSend } = useAuth();
 
     const currentSavedWallet = useMemo(() => {
         const currentWalletId = currentWallet?.getWalletId();
@@ -181,6 +182,34 @@ const SendScreen: FC = () => {
         handleScannerClose();
     };
 
+    const handleFastSendToMyself = async () => {
+        if (!currentWallet || !address) return;
+        setIsLoading(true);
+        try {
+            if (selectedToken.type === 'TON') {
+                const tonTransferParams: TONTransferRequest = {
+                    recipientAddress: address,
+                    transferAmount: '1', // 1 nanotons
+                };
+                const tx = await currentWallet.createTransferTonTransaction(tonTransferParams);
+                await currentWallet.sendTransaction(tx);
+            } else if (selectedToken.data) {
+                const jettonAmount = '1'; // 1 in smallest unit
+                const jettonTransaction = await currentWallet.createTransferJettonTransaction({
+                    recipientAddress: address,
+                    jettonAddress: selectedToken.data.address,
+                    transferAmount: jettonAmount,
+                });
+                await currentWallet.sendTransaction(jettonTransaction);
+            }
+            router.back();
+        } catch (err) {
+            Alert.alert('Error', isLedgerWallet ? getLedgerErrorMessage(err) : getErrorMessage(err, 'Failed to send'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <AppKeyboardAwareScrollView contentContainerStyle={styles.containerContent} style={styles.container}>
             <ScreenHeader.Container>
@@ -230,6 +259,17 @@ const SendScreen: FC = () => {
                         </AppText>
                     </View>
                 </View>
+            )}
+
+            {showFastSend && (
+                <AppButton.Container
+                    colorScheme="secondary"
+                    disabled={isLoading}
+                    onPress={handleFastSendToMyself}
+                    style={styles.fastSendButton}
+                >
+                    <AppButton.Text>Send to myself</AppButton.Text>
+                </AppButton.Container>
             )}
 
             <AppButton.Container
@@ -319,5 +359,8 @@ const styles = StyleSheet.create(({ sizes, colors }, runtime) => ({
     ledgerPromptHint: {
         color: colors.text.secondary,
         fontSize: 13,
+    },
+    fastSendButton: {
+        marginBottom: sizes.space.vertical,
     },
 }));
