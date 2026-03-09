@@ -6,6 +6,7 @@
  *
  */
 
+export { AnimatedBalance } from './AnimatedBalance';
 export { AppRouter } from './AppRouter';
 export { Button } from './Button';
 export { Card } from './Card';

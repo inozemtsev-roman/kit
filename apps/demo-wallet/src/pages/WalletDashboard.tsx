@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useWallet, useWalletKit, useTonConnect, useTransactionRequests, useSignDataRequests } from '@demo/wallet-core';
 
 import {
+    AnimatedBalance,
     Layout,
     Button,
     Card,
@@ -116,11 +117,6 @@ export const WalletDashboard: React.FC = () => {
         }
     }, [walletKit]);
 
-    const formatTonAmount = (amount: string): string => {
-        const tonAmount = parseFloat(amount || '0') / 1000000000; // Convert nanoTON to TON
-        return tonAmount.toFixed(4);
-    };
-
     const handleSwitchWallet = async (walletId: string) => {
         try {
             await switchWallet(walletId);
@@ -163,7 +159,7 @@ export const WalletDashboard: React.FC = () => {
 
                         {/* Row 2: Balance */}
                         <p className="text-xl font-bold text-gray-900 truncate">
-                            {formatTonAmount(balance || '0')} TON
+                            <AnimatedBalance balance={balance} />
                         </p>
 
                         {/* Row 3: Address with copy, refresh, TONScan, TONViewer */}

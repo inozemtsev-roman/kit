@@ -24,7 +24,7 @@ interface JettonsCardProps {
 }
 
 export const JettonsCard: React.FC<JettonsCardProps> = ({ className = '', embedded = false }) => {
-    const { userJettons, isLoadingJettons, error, loadUserJettons } = useJettons();
+    const { userJettons, error, loadUserJettons } = useJettons();
 
     const formatAddress = (address: string): string => {
         return `${address.slice(0, 4)}...${address.slice(-4)}`;
@@ -61,29 +61,25 @@ export const JettonsCard: React.FC<JettonsCardProps> = ({ className = '', embedd
         );
     }
 
-    const mainContent = isLoadingJettons ? (
-        <div className="flex items-center justify-center py-6">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-            <span className="ml-2 text-sm text-gray-600">Loading jettons...</span>
-        </div>
-    ) : totalJettons === 0 ? (
-        <div className="text-center py-4">
-            <p className="text-sm text-gray-500">No jettons yet</p>
-        </div>
-    ) : (
-        <div className="space-y-2">
-            {topJettons.map((jetton) => (
-                <JettonRow
-                    key={jetton.address}
-                    jetton={jetton}
-                    formatAddress={formatAddress}
-                    onClick={() => log.info('Jetton clicked:', getJettonsName(jetton))}
-                    inline
-                />
-            ))}
-            {totalJettons > 3 && <p className="text-xs text-gray-500 text-center pt-1">+{totalJettons - 3} more</p>}
-        </div>
-    );
+    const mainContent =
+        totalJettons === 0 ? (
+            <div className="text-center py-4">
+                <p className="text-sm text-gray-500">No jettons yet</p>
+            </div>
+        ) : (
+            <div className="space-y-2">
+                {topJettons.map((jetton) => (
+                    <JettonRow
+                        key={jetton.address}
+                        jetton={jetton}
+                        formatAddress={formatAddress}
+                        onClick={() => log.info('Jetton clicked:', getJettonsName(jetton))}
+                        inline
+                    />
+                ))}
+                {totalJettons > 3 && <p className="text-xs text-gray-500 text-center pt-1">+{totalJettons - 3} more</p>}
+            </div>
+        );
 
     const wrapper = (children: React.ReactNode) =>
         embedded ? (
