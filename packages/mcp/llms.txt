@@ -32,29 +32,10 @@ Registry mode only. Switch active wallet.
 Parameters:
 - walletSelector (required): wallet id, name, or address
 
-### import_wallet_from_mnemonic
-Registry mode only. Import a standard wallet into the local config registry and make it active.
-Parameters:
-- mnemonic (required): 24-word mnemonic phrase
-- network (optional): mainnet or testnet
-- walletVersion (optional): v5r1 or v4r2
-- name (optional): wallet display name
-
-### import_wallet_from_private_key
-Registry mode only. Import a standard wallet from private key and make it active.
-Parameters:
-- privateKey (required): 32-byte or 64-byte hex private key
-- network (optional): mainnet or testnet
-- walletVersion (optional): v5r1 or v4r2
-- name (optional): wallet display name
-
 ### remove_wallet
-Registry mode only. Remove a wallet from the local config registry.
+Registry mode only. Soft-delete a wallet from the local config registry. Removed wallets remain in config but are hidden from MCP lookups and lists.
 Parameters:
 - walletSelector (required): wallet id, name, or address
-
-### reset_wallet_config
-Registry mode only. Delete the local TON config registry file.
 
 ### get_balance
 Get TON balance of the wallet.
@@ -150,7 +131,7 @@ Parameters:
 - fromAddress (optional): sender address
 Returns: top-level normalizedHash plus details
 
-### deploy_agentic_subwallet
+### agentic_deploy_subwallet
 Deploy a new Agentic sub-wallet from a user-root Agentic wallet.
 Parameters:
 - operatorPublicKey (required): new sub-wallet operator public key (`uint256`, decimal or `0x`-hex)
@@ -202,7 +183,7 @@ Find the associated DNS domain for a wallet address when available.
 Parameters:
 - address (required): TON wallet address
 
-### validate_agentic_wallet
+### agentic_validate_wallet
 Registry mode only. Validate an agentic wallet against network/collection and optional owner.
 Parameters:
 - address (required): agentic wallet address
@@ -210,33 +191,28 @@ Parameters:
 - collectionAddress (optional): collection override
 - ownerAddress (optional): expected owner address
 
-### preflight_validate_agentic_wallet
-Registry mode only. Cheap preflight check that verifies an address is an active agentic wallet contract before deeper storage parsing or onboarding completion.
+### agentic_preflight_validate_wallet
+Registry mode only. Preflight-check an agentic wallet against network/collection and optional owner.
 Parameters:
-- address (required): wallet address to preflight-check
+- address (required): agentic wallet address
 - network (optional): mainnet or testnet
+- collectionAddress (optional): collection override
+- ownerAddress (optional): expected owner address
 
-### list_agentic_wallets_by_owner
+### agentic_list_wallets_by_owner
 Registry mode only. Find agentic wallets owned by a main wallet.
 Parameters:
 - ownerAddress (required): owner wallet address
 - network (optional): mainnet or testnet
 
-### add_agent_wallet
-Registry mode only. Import an existing agentic wallet into the local registry.
+### agentic_add_wallet
+Registry mode only. Import an existing agentic wallet into the local registry. If no matching pending draft exists, the wallet remains read-only until agentic_rotate_operator_key is completed.
 Parameters:
 - address (required): agentic wallet address
 - network (optional): mainnet or testnet
 - name (optional): wallet display name
-- operatorPrivateKey (optional): operator private key
 
-### set_agentic_operator_private_key
-Registry mode only. Attach or replace the operator private key for an imported agentic wallet.
-Parameters:
-- walletSelector (required): wallet id, name, or address
-- privateKey (required): operator private key
-
-### start_agentic_root_wallet_setup
+### agentic_start_root_wallet_setup
 Registry mode only. Start first root-agent setup, generate operator keys, persist a pending draft, and return a dashboard URL.
 Parameters:
 - network (optional): mainnet or testnet
@@ -245,22 +221,22 @@ Parameters:
 - collectionAddress (optional): collection override
 - tonDeposit (optional): TON deposit hint
 
-### list_pending_agentic_root_wallet_setups
+### agentic_list_pending_root_wallet_setups
 Registry mode only. List pending root-agent onboarding drafts.
 
-### get_agentic_root_wallet_setup
+### agentic_get_root_wallet_setup
 Registry mode only. Read one pending setup.
 Parameters:
 - setupId (required): pending setup identifier
 
-### complete_agentic_root_wallet_setup
+### agentic_complete_root_wallet_setup
 Registry mode only. Complete onboarding from callback state or a manual wallet address, then import the wallet and make it active.
 Parameters:
 - setupId (required): pending setup identifier
 - walletAddress (optional): manual wallet address if no callback was received
 - ownerAddress (optional): owner address hint for validation
 
-### cancel_agentic_root_wallet_setup
+### agentic_cancel_root_wallet_setup
 Registry mode only. Cancel a pending setup.
 Parameters:
 - setupId (required): pending setup identifier
@@ -291,18 +267,18 @@ Parameters:
 5. Default: poll get_transaction_status until completed or failed. User can ask to skip.
 
 ### Importing an Existing Agentic Wallet
-1. preflight_validate_agentic_wallet if you want a cheap contract-type check first
-2. validate_agentic_wallet if the wallet only exists as an address
-3. add_agent_wallet to import it into the local registry
-4. If the wallet has no operator private key yet, call set_agentic_operator_private_key
+1. agentic_validate_wallet if the wallet only exists as an address
+2. agentic_preflight_validate_wallet if you want the lightweight preflight wording
+3. agentic_add_wallet to import it into the local registry
+4. If the wallet needs write access and no pending draft was recovered, use agentic_rotate_operator_key and then agentic_complete_rotate_operator_key
 5. Only then use write tools for that wallet
 
 ### Setting Up the First Agentic Root Wallet
-1. start_agentic_root_wallet_setup
+1. agentic_start_root_wallet_setup
 2. Tell the user to open the returned dashboard URL and create the wallet from their main wallet
-3. Inspect get_agentic_root_wallet_setup or list_pending_agentic_root_wallet_setups
-4. If completion is manual, preflight_validate_agentic_wallet is the fastest way to reject a wrong address before full validation
-5. complete_agentic_root_wallet_setup when callback data is available or when the user provides the created wallet address
+3. Inspect agentic_get_root_wallet_setup or agentic_list_pending_root_wallet_setups
+4. If completion is manual, use agentic_validate_wallet or agentic_preflight_validate_wallet
+5. agentic_complete_root_wallet_setup when callback data is available or when the user provides the created wallet address
 
 ## Important Notes
 

@@ -10,10 +10,18 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSy
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 
-import { MemoryStorageAdapter, Network, Signer, TonWalletKit, WalletV4R2Adapter, WalletV5R1Adapter } from '@ton/walletkit';
+import {
+    MemoryStorageAdapter,
+    Network,
+    Signer,
+    TonWalletKit,
+    WalletV4R2Adapter,
+    WalletV5R1Adapter,
+} from '@ton/walletkit';
 
 import { formatAssetAddress, formatWalletAddress, normalizeAddressForComparison } from '../utils/address.js';
 import { parsePrivateKeyInput } from '../utils/private-key.js';
+import { createApiClient } from '../utils/ton-client.js';
 
 export type TonNetwork = 'mainnet' | 'testnet';
 export type StandardWalletVersion = 'v5r1' | 'v4r2';
@@ -30,6 +38,8 @@ export interface StoredWalletBase {
     type: StoredWalletType;
     network: TonNetwork;
     address: string;
+    removed?: boolean;
+    removed_at?: string;
     created_at: string;
     updated_at: string;
 }
@@ -62,6 +72,19 @@ export interface PendingAgenticDeployment {
     name?: string;
     source?: string;
     collection_address?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface PendingAgenticKeyRotation {
+    id: string;
+    wallet_id: string;
+    network: TonNetwork;
+    wallet_address: string;
+    owner_address: string;
+    collection_address?: string;
+    operator_private_key: string;
+    operator_public_key: string;
     created_at: string;
     updated_at: string;
 }
@@ -101,6 +124,7 @@ export interface TonConfig {
     };
     wallets: StoredWallet[];
     pending_agentic_deployments?: PendingAgenticDeployment[];
+    pending_agentic_key_rotations?: PendingAgenticKeyRotation[];
     agentic_setup_sessions?: StoredAgenticSetupSession[];
 }
 
@@ -122,6 +146,10 @@ function nowIso(): string {
     return new Date().toISOString();
 }
 
+function isWalletRemoved(wallet: StoredWallet): boolean {
+    return wallet.removed === true;
+}
+
 function normalizeConfig(raw: TonConfig): TonConfig {
     const normalizePendingDeployment = (deployment: PendingAgenticDeployment): PendingAgenticDeployment => ({
         ...deployment,
@@ -130,6 +158,16 @@ function normalizeConfig(raw: TonConfig): TonConfig {
         ...(deployment.collection_address
             ? {
                   collection_address: formatAssetAddress(deployment.collection_address, deployment.network),
+              }
+            : {}),
+    });
+    const normalizePendingKeyRotation = (rotation: PendingAgenticKeyRotation): PendingAgenticKeyRotation => ({
+        ...rotation,
+        wallet_address: formatWalletAddress(rotation.wallet_address, rotation.network),
+        owner_address: formatWalletAddress(rotation.owner_address, rotation.network),
+        ...(rotation.collection_address
+            ? {
+                  collection_address: formatAssetAddress(rotation.collection_address, rotation.network),
               }
             : {}),
     });
@@ -190,6 +228,11 @@ function normalizeConfig(raw: TonConfig): TonConfig {
                   pending_agentic_deployments: raw.pending_agentic_deployments.map(normalizePendingDeployment),
               }
             : {}),
+        ...(Array.isArray(raw.pending_agentic_key_rotations) && raw.pending_agentic_key_rotations.length > 0
+            ? {
+                  pending_agentic_key_rotations: raw.pending_agentic_key_rotations.map(normalizePendingKeyRotation),
+              }
+            : {}),
         ...(Array.isArray(raw.agentic_setup_sessions) && raw.agentic_setup_sessions.length > 0
             ? {
                   agentic_setup_sessions: raw.agentic_setup_sessions.map(normalizeSetupSession),
@@ -224,7 +267,7 @@ async function deriveLegacyWalletAddress(config: LegacyTonConfig): Promise<strin
     const kit = new TonWalletKit({
         networks: {
             [(network === 'testnet' ? Network.testnet() : Network.mainnet()).chainId]: {
-                apiClient: {},
+                apiClient: createApiClient(network, config.toncenter_api_key),
             },
         },
         storage: new MemoryStorageAdapter(),
@@ -401,14 +444,14 @@ export function deleteConfig(): boolean {
 }
 
 export function listWallets(config: TonConfig): StoredWallet[] {
-    return [...config.wallets];
+    return config.wallets.filter((wallet) => !isWalletRemoved(wallet));
 }
 
 export function getActiveWallet(config: TonConfig): StoredWallet | null {
     if (!config.active_wallet_id) {
         return null;
     }
-    return config.wallets.find((wallet) => wallet.id === config.active_wallet_id) ?? null;
+    return config.wallets.find((wallet) => wallet.id === config.active_wallet_id && !isWalletRemoved(wallet)) ?? null;
 }
 
 export function findWallet(config: TonConfig, selector: string): StoredWallet | null {
@@ -418,21 +461,26 @@ export function findWallet(config: TonConfig, selector: string): StoredWallet | 
         return null;
     }
 
-    const exact = config.wallets.find(
-        (wallet) =>
+    const exact = config.wallets.find((wallet) => {
+        if (isWalletRemoved(wallet)) {
+            return false;
+        }
+        return (
             wallet.id.toLowerCase() === normalized ||
             wallet.name.toLowerCase() === normalized ||
             wallet.address.toLowerCase() === normalized ||
             (normalizedRawAddress !== null &&
-                normalizeAddressForComparison(wallet.address)?.toLowerCase() === normalizedRawAddress.toLowerCase()),
-    );
+                normalizeAddressForComparison(wallet.address)?.toLowerCase() === normalizedRawAddress.toLowerCase())
+        );
+    });
     if (exact) {
         return exact;
     }
 
     const partial = config.wallets.find(
         (wallet) =>
-            wallet.id.toLowerCase().startsWith(normalized) || wallet.address.toLowerCase().startsWith(normalized),
+            !isWalletRemoved(wallet) &&
+            (wallet.id.toLowerCase().startsWith(normalized) || wallet.address.toLowerCase().startsWith(normalized)),
     );
     return partial ?? null;
 }
@@ -446,6 +494,7 @@ export function findWalletByAddress(config: TonConfig, network: TonNetwork, addr
     return (
         config.wallets.find(
             (wallet) =>
+                !isWalletRemoved(wallet) &&
                 wallet.network === network &&
                 normalizeAddressForComparison(wallet.address)?.toLowerCase() === normalizedAddress.toLowerCase(),
         ) ?? null
@@ -499,12 +548,19 @@ export function removeWallet(config: TonConfig, selector: string): { config: Ton
         return { config, removed: null };
     }
 
-    const nextWallets = config.wallets.filter((item) => item.id !== wallet.id);
+    const removedWallet = {
+        ...wallet,
+        removed: true,
+        removed_at: nowIso(),
+        updated_at: nowIso(),
+    };
+    const nextWallets = config.wallets.map((item) => (item.id === wallet.id ? removedWallet : item));
+    const nextVisibleWallets = nextWallets.filter((item) => !isWalletRemoved(item));
     const nextActive =
-        config.active_wallet_id === wallet.id ? (nextWallets[0]?.id ?? null) : (config.active_wallet_id ?? null);
+        config.active_wallet_id === wallet.id ? (nextVisibleWallets[0]?.id ?? null) : (config.active_wallet_id ?? null);
 
     return {
-        removed: wallet,
+        removed: removedWallet,
         config: {
             ...config,
             wallets: nextWallets,
@@ -534,6 +590,10 @@ export function setActiveWallet(
 
 export function listPendingAgenticDeployments(config: TonConfig): PendingAgenticDeployment[] {
     return [...(config.pending_agentic_deployments ?? [])];
+}
+
+export function listPendingAgenticKeyRotations(config: TonConfig): PendingAgenticKeyRotation[] {
+    return [...(config.pending_agentic_key_rotations ?? [])];
 }
 
 export function listAgenticSetupSessions(config: TonConfig): StoredAgenticSetupSession[] {
@@ -598,6 +658,57 @@ export function upsertPendingAgenticDeployment(config: TonConfig, deployment: Pe
     };
 }
 
+export function findPendingAgenticKeyRotation(
+    config: TonConfig,
+    input: {
+        id?: string;
+        walletId?: string;
+    },
+): PendingAgenticKeyRotation | null {
+    return (
+        (config.pending_agentic_key_rotations ?? []).find((rotation) => {
+            if (input.id && rotation.id !== input.id) {
+                return false;
+            }
+            if (input.walletId && rotation.wallet_id !== input.walletId) {
+                return false;
+            }
+            return true;
+        }) ?? null
+    );
+}
+
+export function upsertPendingAgenticKeyRotation(config: TonConfig, rotation: PendingAgenticKeyRotation): TonConfig {
+    const rotations = config.pending_agentic_key_rotations ?? [];
+    const existingIndex = rotations.findIndex((item) => item.id === rotation.id);
+    const now = nowIso();
+    const existingRotation = existingIndex === -1 ? null : rotations[existingIndex]!;
+    const nextRotation = !existingRotation
+        ? {
+              ...rotation,
+              created_at: rotation.created_at || now,
+              updated_at: rotation.updated_at || now,
+          }
+        : {
+              ...existingRotation,
+              ...rotation,
+              created_at: existingRotation.created_at,
+              updated_at: now,
+          };
+
+    const nextRotations = [...rotations];
+    if (existingIndex === -1) {
+        nextRotations.push(nextRotation);
+    } else {
+        nextRotations[existingIndex] = nextRotation;
+    }
+
+    return {
+        ...config,
+        ...(nextRotations.length > 0 ? { pending_agentic_key_rotations: nextRotations } : {}),
+    };
+}
+
 export function removePendingAgenticDeployment(
     config: TonConfig,
     input: {
@@ -631,6 +742,34 @@ export function removePendingAgenticDeployment(
     return {
         ...config,
         pending_agentic_deployments: nextDeployments,
+    };
+}
+
+export function removePendingAgenticKeyRotation(
+    config: TonConfig,
+    input: {
+        id?: string;
+        walletId?: string;
+    },
+): TonConfig {
+    const nextRotations = (config.pending_agentic_key_rotations ?? []).filter((rotation) => {
+        if (input.id && rotation.id === input.id) {
+            return false;
+        }
+        if (input.walletId && rotation.wallet_id === input.walletId) {
+            return false;
+        }
+        return true;
+    });
+
+    if (nextRotations.length === 0) {
+        const { pending_agentic_key_rotations: _rotations, ...rest } = config;
+        return rest;
+    }
+
+    return {
+        ...config,
+        pending_agentic_key_rotations: nextRotations,
     };
 }
 
@@ -801,6 +940,33 @@ export function createPendingAgenticDeployment(input: {
         ...(input.collectionAddress
             ? { collection_address: formatAssetAddress(input.collectionAddress, input.network) }
             : {}),
+        created_at: now,
+        updated_at: now,
+    };
+}
+
+export function createPendingAgenticKeyRotation(input: {
+    walletId: string;
+    network: TonNetwork;
+    walletAddress: string;
+    ownerAddress: string;
+    collectionAddress?: string;
+    operatorPrivateKey: string;
+    operatorPublicKey: string;
+    idPrefix?: string;
+}): PendingAgenticKeyRotation {
+    const now = nowIso();
+    return {
+        id: createWalletId(input.idPrefix ?? 'pending-agentic-key-rotation'),
+        wallet_id: input.walletId,
+        network: input.network,
+        wallet_address: formatWalletAddress(input.walletAddress, input.network),
+        owner_address: formatWalletAddress(input.ownerAddress, input.network),
+        ...(input.collectionAddress
+            ? { collection_address: formatAssetAddress(input.collectionAddress, input.network) }
+            : {}),
+        operator_private_key: input.operatorPrivateKey,
+        operator_public_key: input.operatorPublicKey,
         created_at: now,
         updated_at: now,
     };

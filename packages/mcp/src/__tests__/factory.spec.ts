@@ -72,8 +72,11 @@ describe('createTonWalletMCP registry mode', () => {
 
             expect(names).toContain('list_wallets');
             expect(names).toContain('get_current_wallet');
-            expect(names).toContain('start_agentic_root_wallet_setup');
-            expect(names).toContain('preflight_validate_agentic_wallet');
+            expect(names).toContain('agentic_start_root_wallet_setup');
+            expect(names).toContain('agentic_preflight_validate_wallet');
+            expect(names).toContain('agentic_rotate_operator_key');
+            expect(names).toContain('agentic_complete_rotate_operator_key');
+            expect(names).not.toContain('reset_wallet_config');
             expect(names).toContain('get_balance');
 
             const getBalance = tools.tools.find((tool) => tool.name === 'get_balance');
@@ -220,7 +223,7 @@ describe('createTonWalletMCP registry mode', () => {
 
             const started = parseToolResult(
                 await client.callTool({
-                    name: 'start_agentic_root_wallet_setup',
+                    name: 'agentic_start_root_wallet_setup',
                     arguments: {
                         network: 'mainnet',
                         name: 'Agent Alpha',
@@ -239,7 +242,7 @@ describe('createTonWalletMCP registry mode', () => {
 
             const pending = parseToolResult(
                 await client.callTool({
-                    name: 'list_pending_agentic_root_wallet_setups',
+                    name: 'agentic_list_pending_root_wallet_setups',
                     arguments: {},
                 }),
             );

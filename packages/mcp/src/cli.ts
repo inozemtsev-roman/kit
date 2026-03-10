@@ -43,13 +43,17 @@ import {
     MemoryStorageAdapter,
     Network,
 } from '@ton/walletkit';
-import type { Wallet, ApiClientConfig, WalletSigner } from '@ton/walletkit';
+import type { Wallet, WalletSigner } from '@ton/walletkit';
 
 import { createTonWalletMCP } from './factory.js';
 import type { NetworkType } from './types/config.js';
 import { AgenticWalletAdapter } from './contracts/agentic_wallet/AgenticWalletAdapter.js';
 import { createHttpMcpSessionRouter } from './http-mode.js';
-import { AgenticSetupSessionManager, ConfigBackedAgenticSetupSessionStore } from './services/AgenticSetupSessionManager.js';
+import {
+    AgenticSetupSessionManager,
+    ConfigBackedAgenticSetupSessionStore,
+} from './services/AgenticSetupSessionManager.js';
+import { createApiClient } from './utils/ton-client.js';
 
 const SERVER_NAME = 'ton-mcp';
 
@@ -251,19 +255,13 @@ async function createWalletAndServer(agenticSessionManager?: AgenticSetupSession
         return { server };
     }
 
-    const network = NETWORK === 'mainnet' ? Network.mainnet() : Network.testnet();
-
-    // Configure API client
-    const apiConfig: ApiClientConfig = {};
-    if (TONCENTER_API_KEY) {
-        apiConfig.url = NETWORK === 'mainnet' ? 'https://toncenter.com' : 'https://testnet.toncenter.com';
-        apiConfig.key = TONCENTER_API_KEY;
-    }
+    const networkType = NETWORK === 'mainnet' ? 'mainnet' : 'testnet';
+    const network = networkType === 'mainnet' ? Network.mainnet() : Network.testnet();
 
     // Initialize TonWalletKit
     const kit = new TonWalletKit({
         networks: {
-            [network.chainId]: { apiClient: apiConfig },
+            [network.chainId]: { apiClient: createApiClient(networkType, TONCENTER_API_KEY) },
         },
         storage: new MemoryStorageAdapter(),
     });

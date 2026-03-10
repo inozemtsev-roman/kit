@@ -29,7 +29,7 @@ import type {
     TonNetwork,
 } from '../registry/config.js';
 import { parsePrivateKeyInput } from '../utils/private-key.js';
-import { buildApiClientConfig } from '../utils/ton-client.js';
+import { createApiClient } from '../utils/ton-client.js';
 
 export interface WalletServiceContext {
     service: McpWalletService;
@@ -40,7 +40,7 @@ function createKit(network: TonNetwork, apiKey?: string): TonWalletKitType {
     const normalized = network === 'testnet' ? Network.testnet() : Network.mainnet();
     return new TonWalletKit({
         networks: {
-            [normalized.chainId]: { apiClient: buildApiClientConfig(network, apiKey) },
+            [normalized.chainId]: { apiClient: createApiClient(network, apiKey) },
         },
         storage: new MemoryStorageAdapter(),
     });

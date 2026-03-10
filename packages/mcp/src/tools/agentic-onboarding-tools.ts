@@ -8,7 +8,7 @@
 
 import { z } from 'zod';
 
-import { AgenticOnboardingService } from '../services/AgenticOnboardingService.js';
+import type { AgenticOnboardingService } from '../services/AgenticOnboardingService.js';
 import {
     sanitizeRootWalletSetup,
     sanitizeRootWalletSetups,

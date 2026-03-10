@@ -15,7 +15,9 @@ export const resolveDnsSchema = z.object({
     domain: z
         .string()
         .min(1)
-        .describe('DNS/domain name to resolve via TON DNS-compatible resolution (e.g., "foundation.ton" or "viqex.t.me")'),
+        .describe(
+            'DNS/domain name to resolve via TON DNS-compatible resolution (e.g., "foundation.ton" or "viqex.t.me")',
+        ),
 });
 
 export const backResolveDnsSchema = z.object({
@@ -81,8 +83,7 @@ export function createMcpDnsTools(service: McpWalletService) {
         },
 
         back_resolve_dns: {
-            description:
-                'Reverse resolve a TON wallet address to its associated DNS domain when available.',
+            description: 'Reverse resolve a TON wallet address to its associated DNS domain when available.',
             inputSchema: backResolveDnsSchema,
             handler: async (args: z.infer<typeof backResolveDnsSchema>): Promise<ToolResponse> => {
                 try {

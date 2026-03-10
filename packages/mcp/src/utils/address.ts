@@ -35,7 +35,10 @@ export function formatAssetAddress(address: string | Address, network: McpAddres
     return parsed.toString({ bounceable: true, testOnly: network === 'testnet' });
 }
 
-export function formatAssetAddressSafe(address: string | null | undefined, network: McpAddressNetwork): string | undefined {
+export function formatAssetAddressSafe(
+    address: string | null | undefined,
+    network: McpAddressNetwork,
+): string | undefined {
     if (!address) {
         return undefined;
     }

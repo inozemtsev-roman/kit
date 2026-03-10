@@ -17,9 +17,8 @@ import {
     removeAgenticSetupSession,
     saveConfig,
     upsertAgenticSetupSession,
-    type AgenticSetupStatus,
-    type StoredAgenticSetupSession,
 } from '../registry/config.js';
+import type { AgenticSetupStatus, StoredAgenticSetupSession } from '../registry/config.js';
 
 export interface AgenticDeployCallbackPayload {
     event: 'agent_wallet_deployed';
@@ -252,7 +251,9 @@ export class AgenticSetupSessionManager {
         }
 
         try {
-            const payload = JSON.parse((await this.readRequestBody(req)).toString('utf-8')) as AgenticDeployCallbackPayload;
+            const payload = JSON.parse(
+                (await this.readRequestBody(req)).toString('utf-8'),
+            ) as AgenticDeployCallbackPayload;
             if (payload.event !== 'agent_wallet_deployed') {
                 throw new Error(`Unexpected callback event: ${String(payload.event)}`);
             }

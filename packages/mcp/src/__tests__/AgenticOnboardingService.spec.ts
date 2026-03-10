@@ -72,10 +72,7 @@ describe('AgenticOnboardingService', () => {
         return {
             registry,
             sessionManager,
-            service: new AgenticOnboardingService(
-                registry as never,
-                sessionManager as never,
-            ),
+            service: new AgenticOnboardingService(registry as never, sessionManager as never),
         };
     }
 

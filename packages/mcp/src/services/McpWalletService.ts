@@ -33,7 +33,6 @@ import type {
     Wallet,
     SwapQuoteParams,
     SwapParams,
-    ApiClientConfig,
     WalletAdapter,
     TransactionRequest,
     TransactionStatusResponse,
@@ -44,6 +43,7 @@ import { Address, beginCell, Cell, contractAddress, Dictionary, storeStateInit }
 import type { IContactResolver } from '../types/contacts.js';
 import type { NetworkType } from '../types/config.js';
 import { AgenticWalletCodeCell } from '../contracts/agentic_wallet/AgenticWallet.source.js';
+import { createApiClient } from '../utils/ton-client.js';
 
 const UINT_256_MAX = 1n << 256n;
 const OP_DEPLOY_WALLET = 0x0609e47b;
@@ -416,23 +416,14 @@ export class McpWalletService {
      */
     private async getKit(): Promise<TonWalletKit> {
         if (!this.kit) {
-            // Build network config with optional API keys
-            const mainnetConfig: ApiClientConfig = {};
-            const testnetConfig: ApiClientConfig = {};
-
-            if (this.config.networks?.mainnet?.apiKey) {
-                mainnetConfig.url = 'https://toncenter.com';
-                mainnetConfig.key = this.config.networks.mainnet.apiKey;
-            }
-            if (this.config.networks?.testnet?.apiKey) {
-                testnetConfig.url = 'https://testnet.toncenter.com';
-                testnetConfig.key = this.config.networks.testnet.apiKey;
-            }
-
             this.kit = new TonWalletKit({
                 networks: {
-                    [Network.mainnet().chainId]: { apiClient: mainnetConfig },
-                    [Network.testnet().chainId]: { apiClient: testnetConfig },
+                    [Network.mainnet().chainId]: {
+                        apiClient: createApiClient('mainnet', this.config.networks?.mainnet?.apiKey),
+                    },
+                    [Network.testnet().chainId]: {
+                        apiClient: createApiClient('testnet', this.config.networks?.testnet?.apiKey),
+                    },
                 },
                 storage: new MemoryStorageAdapter(),
             });

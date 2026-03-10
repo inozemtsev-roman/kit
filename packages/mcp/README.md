@@ -133,32 +133,11 @@ Set the active wallet by id, name, or address.
 **Parameters:**
 - `walletSelector` (required): Wallet id, name, or address
 
-#### `import_wallet_from_mnemonic` (registry mode only)
-Import a standard wallet from mnemonic into the local registry and make it active.
-
-**Parameters:**
-- `mnemonic` (required): 24-word mnemonic phrase
-- `network` (optional): `mainnet` or `testnet`
-- `walletVersion` (optional): `v5r1` or `v4r2`
-- `name` (optional): Wallet display name
-
-#### `import_wallet_from_private_key` (registry mode only)
-Import a standard wallet from private key into the local registry and make it active.
-
-**Parameters:**
-- `privateKey` (required): 32-byte or 64-byte hex private key
-- `network` (optional): `mainnet` or `testnet`
-- `walletVersion` (optional): `v5r1` or `v4r2`
-- `name` (optional): Wallet display name
-
 #### `remove_wallet` (registry mode only)
-Remove a stored wallet from the local registry.
+Soft-delete a stored wallet from the local registry. Removed wallets remain in the config file but are hidden from MCP listings and wallet selection.
 
 **Parameters:**
 - `walletSelector` (required): Wallet id, name, or address
-
-#### `reset_wallet_config` (registry mode only)
-Delete the local TON config registry file.
 
 ### Balance & History
 
@@ -250,7 +229,7 @@ Send a raw transaction with full control over messages. Supports multiple messag
 - `validUntil` (optional): Unix timestamp after which the transaction becomes invalid
 - `fromAddress` (optional): Sender wallet address
 
-#### `deploy_agentic_subwallet`
+#### `agentic_deploy_subwallet`
 Deploy a new Agentic sub-wallet from the current wallet. Works only with an agentic root wallet that can sign and only when the current wallet is a user-root wallet (`deployedByUser=true`). Returns `normalizedHash`, deployed sub-wallet address, and computed sub-wallet NFT index. NFT metadata is written in onchain TEP-64 format.
 
 **Default flow:** Poll `get_transaction_status` with the returned `normalizedHash` until completion.
@@ -335,7 +314,7 @@ Update Toncenter or agentic collection settings for a network.
 - `toncenterApiKey` (optional): Toncenter API key for this network
 - `agenticCollectionAddress` (optional): Agentic collection address override
 
-#### `validate_agentic_wallet` (registry mode only)
+#### `agentic_validate_wallet` (registry mode only)
 Validate an existing agentic wallet address against the expected network and collection.
 
 **Parameters:**
@@ -344,37 +323,31 @@ Validate an existing agentic wallet address against the expected network and col
 - `collectionAddress` (optional): Collection address override
 - `ownerAddress` (optional): Expected owner address
 
-#### `preflight_validate_agentic_wallet` (registry mode only)
-Run a cheap preflight check that verifies an address is an active agentic wallet contract before deeper storage parsing or onboarding completion.
+#### `agentic_preflight_validate_wallet` (registry mode only)
+Preflight-check an existing agentic wallet address against the expected network and collection.
 
 **Parameters:**
-- `address` (required): Wallet address to preflight-check
+- `address` (required): Agentic wallet address
 - `network` (optional): Network to validate against
+- `collectionAddress` (optional): Collection address override
+- `ownerAddress` (optional): Expected owner address
 
-#### `list_agentic_wallets_by_owner` (registry mode only)
+#### `agentic_list_wallets_by_owner` (registry mode only)
 List agentic wallets owned by a given main wallet address.
 
 **Parameters:**
 - `ownerAddress` (required): Owner wallet address
 - `network` (optional): Network to query
 
-#### `add_agent_wallet` (registry mode only)
-Import an existing agentic wallet into the local TON config registry, recovering a matching pending key draft when available.
+#### `agentic_add_wallet` (registry mode only)
+Import an existing agentic wallet into the local TON config registry, recovering a matching pending key draft when available. Otherwise the wallet is imported read-only until `agentic_rotate_operator_key` is completed.
 
 **Parameters:**
 - `address` (required): Agentic wallet address
 - `network` (optional): Network to validate against
 - `name` (optional): Wallet display name
-- `operatorPrivateKey` (optional): Operator private key
 
-#### `set_agentic_operator_private_key` (registry mode only)
-Attach or replace the operator private key for an imported agentic wallet.
-
-**Parameters:**
-- `walletSelector` (required): Agentic wallet id, name, or address
-- `privateKey` (required): Operator private key
-
-#### `start_agentic_root_wallet_setup` (registry mode only)
+#### `agentic_start_root_wallet_setup` (registry mode only)
 Start first-root-agent setup: generate operator keys, persist a pending draft, and return a dashboard URL for the user to create the wallet from their main wallet.
 
 **Parameters:**
@@ -386,16 +359,16 @@ Start first-root-agent setup: generate operator keys, persist a pending draft, a
 
 Pending onboarding callback state is persisted in the local config, so the setup can be resumed after MCP transport restarts. In HTTP mode, callback URLs are stable on the MCP server base URL. In stdio mode, use `AGENTIC_CALLBACK_BASE_URL` and/or `AGENTIC_CALLBACK_PORT` if you need a fixed callback endpoint across restarts.
 
-#### `list_pending_agentic_root_wallet_setups` (registry mode only)
+#### `agentic_list_pending_root_wallet_setups` (registry mode only)
 List pending root-agent onboarding drafts and their callback/session status.
 
-#### `get_agentic_root_wallet_setup` (registry mode only)
+#### `agentic_get_root_wallet_setup` (registry mode only)
 Get one pending root-agent onboarding draft by setup id.
 
 **Parameters:**
 - `setupId` (required): Pending setup identifier
 
-#### `complete_agentic_root_wallet_setup` (registry mode only)
+#### `agentic_complete_root_wallet_setup` (registry mode only)
 Complete root-agent onboarding from callback payload or manually supplied wallet address, then import the resulting wallet and make it active.
 
 **Parameters:**
@@ -403,7 +376,7 @@ Complete root-agent onboarding from callback payload or manually supplied wallet
 - `walletAddress` (optional): Manual wallet address if no callback was received
 - `ownerAddress` (optional): Owner address hint for validation
 
-#### `cancel_agentic_root_wallet_setup` (registry mode only)
+#### `agentic_cancel_root_wallet_setup` (registry mode only)
 Cancel a pending root-agent onboarding draft and remove its pending state.
 
 **Parameters:**

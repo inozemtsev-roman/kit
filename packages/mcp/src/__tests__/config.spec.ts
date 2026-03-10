@@ -27,6 +27,7 @@ import {
     loadConfig,
     loadConfigWithMigration,
     removePendingAgenticDeployment,
+    removeWallet,
     saveConfig,
     setActiveWallet,
     upsertPendingAgenticDeployment,
@@ -118,6 +119,33 @@ describe('mcp config registry', () => {
 
         const switched = setActiveWallet(config, second.id);
         expect(switched.wallet?.id).toBe(second.id);
+    });
+
+    it('hides soft-deleted wallets from listing, selection, and active lookup', () => {
+        const first = createStandardWalletRecord({
+            name: 'Main wallet',
+            network: 'mainnet',
+            walletVersion: 'v5r1',
+            address: baseAddress,
+        });
+        const second = createAgenticWalletRecord({
+            name: 'Agent wallet',
+            network: 'testnet',
+            address: baseAddress,
+            ownerAddress: DEFAULT_AGENTIC_COLLECTION_ADDRESS,
+        });
+
+        let config = upsertWallet(createEmptyConfig(), first, { setActive: true });
+        config = upsertWallet(config, second);
+        const removed = removeWallet(config, first.id);
+
+        expect(removed.removed).toMatchObject({ id: first.id, removed: true });
+        expect(findWallet(removed.config, first.id)).toBeNull();
+        expect(getActiveWallet(removed.config)?.id).toBe(second.id);
+        expect(removed.config.wallets).toEqual([
+            expect.objectContaining({ id: first.id, removed: true }),
+            expect.objectContaining({ id: second.id }),
+        ]);
     });
 
     it('rejects duplicate normalized addresses on the same network', () => {

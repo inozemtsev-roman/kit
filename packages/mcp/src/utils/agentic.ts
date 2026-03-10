@@ -214,6 +214,13 @@ export function buildAgenticDashboardLink(address: string): string {
     return new URL(`/agent/${address}`, AGENTIC_DASHBOARD_BASE_URL).toString();
 }
 
+export function buildAgenticChangeKeyDeepLink(address: string, nextOperatorPublicKey: string): string {
+    const url = new URL(`/agent/${address}`, AGENTIC_DASHBOARD_BASE_URL);
+    url.searchParams.set('action', 'change-public-key');
+    url.searchParams.set('nextOperatorPublicKey', nextOperatorPublicKey);
+    return url.toString();
+}
+
 function parseAgenticWalletState(accountState: FullAccountState, address: string): AgenticWalletState {
     if (!accountState.data) {
         throw new Error(`Account state data is empty for ${address}`);

@@ -6,7 +6,14 @@
  *
  */
 
-import type { ConfigNetwork, PendingAgenticDeployment, StoredAgenticWallet, StoredStandardWallet, StoredWallet } from '../registry/config.js';
+import type {
+    ConfigNetwork,
+    PendingAgenticDeployment,
+    PendingAgenticKeyRotation,
+    StoredAgenticWallet,
+    StoredStandardWallet,
+    StoredWallet,
+} from '../registry/config.js';
 import type { AgenticRootWalletSetupStatus } from '../services/AgenticOnboardingService.js';
 
 export type PublicStandardWallet = Omit<StoredStandardWallet, 'mnemonic' | 'private_key'> & {
@@ -26,9 +33,11 @@ export interface PublicNetworkConfig {
 export type PublicPendingAgenticDeployment = Omit<PendingAgenticDeployment, 'operator_private_key'> & {
     has_operator_private_key: boolean;
 };
+export type PublicPendingAgenticKeyRotation = Omit<PendingAgenticKeyRotation, 'operator_private_key'> & {
+    has_operator_private_key: boolean;
+};
 
-export interface PublicAgenticRootWalletSetupStatus
-    extends Omit<AgenticRootWalletSetupStatus, 'pendingDeployment'> {
+export interface PublicAgenticRootWalletSetupStatus extends Omit<AgenticRootWalletSetupStatus, 'pendingDeployment'> {
     pendingDeployment: PublicPendingAgenticDeployment;
 }
 
@@ -81,6 +90,22 @@ export function sanitizePendingAgenticDeployments(
     deployments: PendingAgenticDeployment[],
 ): PublicPendingAgenticDeployment[] {
     return deployments.map((deployment) => sanitizePendingAgenticDeployment(deployment));
+}
+
+export function sanitizePendingAgenticKeyRotation(
+    rotation: PendingAgenticKeyRotation,
+): PublicPendingAgenticKeyRotation {
+    const { operator_private_key: _operatorPrivateKey, ...publicRotation } = rotation;
+    return {
+        ...publicRotation,
+        has_operator_private_key: Boolean(rotation.operator_private_key),
+    };
+}
+
+export function sanitizePendingAgenticKeyRotations(
+    rotations: PendingAgenticKeyRotation[],
+): PublicPendingAgenticKeyRotation[] {
+    return rotations.map((rotation) => sanitizePendingAgenticKeyRotation(rotation));
 }
 
 export function sanitizeAgenticRootWalletSetupStatus(

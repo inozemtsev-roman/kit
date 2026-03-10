@@ -13,49 +13,65 @@ import {
     createAgenticWalletRecord,
     createEmptyConfig,
     createPendingAgenticDeployment,
-    createStandardWalletRecord,
-    deleteConfig,
+    createPendingAgenticKeyRotation,
     findPendingAgenticDeployment,
+    findPendingAgenticKeyRotation,
     findWallet,
     findWalletByAddress,
     getActiveWallet,
     getAgenticCollectionAddress,
     listPendingAgenticDeployments,
+    listPendingAgenticKeyRotations,
     listWallets,
     loadConfigWithMigration,
     normalizeNetwork,
-    normalizeWalletVersion,
     removePendingAgenticDeployment,
+    removePendingAgenticKeyRotation,
     removeWallet,
     saveConfig,
     setActiveWallet,
-    type ConfigNetwork,
-    type PendingAgenticDeployment,
-    type StandardWalletVersion,
-    type StoredAgenticWallet,
-    type StoredStandardWallet,
-    type StoredWallet,
-    type TonConfig,
-    type TonNetwork,
     upsertPendingAgenticDeployment,
+    upsertPendingAgenticKeyRotation,
     updateNetworkConfig,
     upsertWallet,
 } from '../registry/config.js';
-import { createMcpWalletServiceFromStoredWallet, deriveStandardWalletAddress } from '../runtime/wallet-runtime.js';
+import type {
+    ConfigNetwork,
+    PendingAgenticDeployment,
+    PendingAgenticKeyRotation,
+    StoredAgenticWallet,
+    StoredWallet,
+    TonConfig,
+    TonNetwork,
+} from '../registry/config.js';
+import { createMcpWalletServiceFromStoredWallet } from '../runtime/wallet-runtime.js';
 import type { WalletServiceContext } from '../runtime/wallet-runtime.js';
 import {
+    buildAgenticChangeKeyDeepLink,
     buildAgenticDashboardLink,
+    generateOperatorKeyPair,
     listAgenticWalletsByOwner,
-    preflightValidateAgenticWalletAddress,
     resolveOperatorCredentials,
     validateAgenticWalletAddress,
-    type AgenticImportCandidate,
-    type AgenticWalletPreflightResult,
 } from '../utils/agentic.js';
+import type { AgenticImportCandidate } from '../utils/agentic.js';
 import { createApiClient } from '../utils/ton-client.js';
 
 function defaultWalletName(prefix: string, address: string): string {
     return `${prefix} ${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+export interface StartAgenticKeyRotationResult {
+    wallet: StoredAgenticWallet;
+    pendingRotation: PendingAgenticKeyRotation;
+    dashboardUrl: string;
+    updatedExisting: boolean;
+}
+
+export interface CompleteAgenticKeyRotationResult {
+    wallet: StoredAgenticWallet;
+    pendingRotation: PendingAgenticKeyRotation;
+    dashboardUrl: string;
 }
 
 export class WalletRegistryService {
@@ -93,7 +109,7 @@ export class WalletRegistryService {
 
         if (!wallet.operator_private_key) {
             throw new ConfigError(
-                `Wallet "${wallet.name}" is missing operator_private_key. Set it with set_agentic_operator_private_key before using write tools.`,
+                `Wallet "${wallet.name}" is missing operator_private_key. Rotate the operator key with agentic_rotate_operator_key before using write tools.`,
             );
         }
     }
@@ -146,82 +162,14 @@ export class WalletRegistryService {
         return result.wallet;
     }
 
-    async removeWallet(selector: string): Promise<{ removed: StoredWallet; activeWalletId: string | null }> {
+    async removeWallet(selector: string): Promise<{ removedWalletId: string; activeWalletId: string | null }> {
         const config = await this.loadConfig();
         const result = removeWallet(config, selector);
         if (!result.removed) {
             throw new ConfigError(`Wallet "${selector}" was not found.`);
         }
         saveConfig(result.config);
-        return { removed: result.removed, activeWalletId: result.config.active_wallet_id };
-    }
-
-    async resetConfig(): Promise<void> {
-        const deleted = deleteConfig();
-        if (!deleted) {
-            throw new ConfigError('No config to reset.');
-        }
-    }
-
-    async importWalletFromMnemonic(input: {
-        mnemonic: string;
-        network?: string;
-        walletVersion?: string;
-        name?: string;
-    }): Promise<StoredStandardWallet> {
-        return this.importStandardWallet({
-            mnemonic: input.mnemonic,
-            network: input.network,
-            walletVersion: input.walletVersion,
-            name: input.name,
-        });
-    }
-
-    async importWalletFromPrivateKey(input: {
-        privateKey: string;
-        network?: string;
-        walletVersion?: string;
-        name?: string;
-    }): Promise<StoredStandardWallet> {
-        return this.importStandardWallet({
-            privateKey: input.privateKey,
-            network: input.network,
-            walletVersion: input.walletVersion,
-            name: input.name,
-        });
-    }
-
-    private async importStandardWallet(input: {
-        mnemonic?: string;
-        privateKey?: string;
-        network?: string;
-        walletVersion?: string;
-        name?: string;
-    }): Promise<StoredStandardWallet> {
-        const config = await this.loadConfig();
-        const network = normalizeNetwork(input.network, 'mainnet');
-        const walletVersion = normalizeWalletVersion(input.walletVersion, 'v5r1');
-        const toncenterApiKey = this.resolveToncenterApiKey(config, network);
-        const address = await deriveStandardWalletAddress({
-            mnemonic: input.mnemonic,
-            privateKey: input.privateKey,
-            network,
-            walletVersion,
-            toncenterApiKey,
-        });
-
-        const record = createStandardWalletRecord({
-            name: input.name?.trim() || defaultWalletName(walletVersion.toUpperCase(), address),
-            network,
-            walletVersion,
-            address,
-            mnemonic: input.mnemonic?.trim(),
-            privateKey: input.privateKey?.trim(),
-        });
-
-        const nextConfig = upsertWallet(config, record, { setActive: true });
-        saveConfig(nextConfig);
-        return record;
+        return { removedWalletId: result.removed.id, activeWalletId: result.config.active_wallet_id };
     }
 
     async createWalletService(
@@ -271,18 +219,16 @@ export class WalletRegistryService {
     async preflightValidateAgenticWallet(input: {
         address: string;
         network?: string;
-    }): Promise<AgenticWalletPreflightResult> {
-        const config = await this.loadConfig();
-        const network = normalizeNetwork(input.network, 'mainnet');
-        const client = createApiClient(network, this.resolveToncenterApiKey(config, network));
-        return preflightValidateAgenticWalletAddress({
-            client,
-            address: input.address,
-            network,
-        });
+        collectionAddress?: string;
+        ownerAddress?: string;
+    }): Promise<AgenticImportCandidate> {
+        return this.validateAgenticWallet(input);
     }
 
-    async listAgenticWalletsByOwner(input: { ownerAddress: string; network?: string }): Promise<AgenticImportCandidate[]> {
+    async listAgenticWalletsByOwner(input: {
+        ownerAddress: string;
+        network?: string;
+    }): Promise<AgenticImportCandidate[]> {
         const config = await this.loadConfig();
         const network = normalizeNetwork(input.network, 'mainnet');
         const client = createApiClient(network, this.resolveToncenterApiKey(config, network));
@@ -299,36 +245,7 @@ export class WalletRegistryService {
         });
     }
 
-    async setAgenticOperatorPrivateKey(input: {
-        selector: string;
-        privateKey: string;
-    }): Promise<StoredAgenticWallet> {
-        const config = await this.loadConfig();
-        const wallet = findWallet(config, input.selector);
-        if (!wallet) {
-            throw new ConfigError(`Wallet "${input.selector}" was not found.`);
-        }
-        if (wallet.type !== 'agentic') {
-            throw new ConfigError(`Wallet "${wallet.name}" is not an agentic wallet.`);
-        }
-
-        const resolved = await resolveOperatorCredentials(input.privateKey, wallet.operator_public_key);
-        const updated: StoredAgenticWallet = {
-            ...wallet,
-            operator_private_key: resolved.privateKey,
-            operator_public_key: resolved.publicKey,
-        };
-        const nextConfig = upsertWallet(config, updated, { setActive: wallet.id === config.active_wallet_id });
-        saveConfig(nextConfig);
-        return updated;
-    }
-
-    async addAgentWallet(input: {
-        address: string;
-        network?: string;
-        name?: string;
-        operatorPrivateKey?: string;
-    }): Promise<{
+    async addAgentWallet(input: { address: string; network?: string; name?: string }): Promise<{
         wallet: StoredAgenticWallet;
         recoveredPendingKeyDraft: boolean;
         updatedExisting: boolean;
@@ -361,20 +278,15 @@ export class WalletRegistryService {
               })
             : null;
 
-        if (input.operatorPrivateKey) {
-            operatorPrivateKey = (
-                await resolveOperatorCredentials(input.operatorPrivateKey, validatedOperatorPublicKey)
-            ).privateKey;
-        } else if (matchedPendingDeployment) {
+        if (matchedPendingDeployment) {
             operatorPrivateKey = matchedPendingDeployment.operator_private_key;
         } else if (existingWallet?.type === 'agentic' && existingWallet.operator_private_key) {
             operatorPrivateKey = existingWallet.operator_private_key;
         }
 
         if (operatorPrivateKey && validatedOperatorPublicKey) {
-            operatorPublicKey = (
-                await resolveOperatorCredentials(operatorPrivateKey, validatedOperatorPublicKey)
-            ).publicKey;
+            operatorPublicKey = (await resolveOperatorCredentials(operatorPrivateKey, validatedOperatorPublicKey))
+                .publicKey;
         }
 
         const record = createAgenticWalletRecord({
@@ -420,6 +332,116 @@ export class WalletRegistryService {
         };
     }
 
+    async startAgenticKeyRotation(input: {
+        walletSelector?: string;
+        operatorPrivateKey?: string;
+    }): Promise<StartAgenticKeyRotationResult> {
+        const config = await this.loadConfig();
+        const wallet = input.walletSelector ? findWallet(config, input.walletSelector) : getActiveWallet(config);
+        if (!wallet) {
+            throw new ConfigError(
+                input.walletSelector
+                    ? `Wallet "${input.walletSelector}" was not found.`
+                    : 'No active wallet configured. Import a wallet first or set one active.',
+            );
+        }
+        if (wallet.type !== 'agentic') {
+            throw new ConfigError(`Wallet "${wallet.name}" is not an agentic wallet.`);
+        }
+
+        const operatorCredentials = input.operatorPrivateKey
+            ? await resolveOperatorCredentials(input.operatorPrivateKey)
+            : await generateOperatorKeyPair();
+        const pendingRotation = createPendingAgenticKeyRotation({
+            walletId: wallet.id,
+            network: wallet.network,
+            walletAddress: wallet.address,
+            ownerAddress: wallet.owner_address,
+            collectionAddress: wallet.collection_address,
+            operatorPrivateKey: operatorCredentials.privateKey,
+            operatorPublicKey: operatorCredentials.publicKey,
+            idPrefix: wallet.name,
+        });
+
+        const updatedExisting = Boolean(findPendingAgenticKeyRotation(config, { walletId: wallet.id }));
+        const nextConfig = upsertPendingAgenticKeyRotation(
+            removePendingAgenticKeyRotation(config, { walletId: wallet.id }),
+            pendingRotation,
+        );
+        saveConfig(nextConfig);
+
+        return {
+            wallet,
+            pendingRotation,
+            dashboardUrl: buildAgenticChangeKeyDeepLink(wallet.address, operatorCredentials.publicKey),
+            updatedExisting,
+        };
+    }
+
+    async listPendingAgenticKeyRotations(): Promise<PendingAgenticKeyRotation[]> {
+        return listPendingAgenticKeyRotations(await this.loadConfig());
+    }
+
+    async getPendingAgenticKeyRotation(rotationId: string): Promise<PendingAgenticKeyRotation | null> {
+        return findPendingAgenticKeyRotation(await this.loadConfig(), { id: rotationId });
+    }
+
+    async completeAgenticKeyRotation(rotationId: string): Promise<CompleteAgenticKeyRotationResult> {
+        const config = await this.loadConfig();
+        const pendingRotation = findPendingAgenticKeyRotation(config, { id: rotationId });
+        if (!pendingRotation) {
+            throw new ConfigError(`Pending agentic key rotation "${rotationId}" was not found.`);
+        }
+
+        const wallet = findWallet(config, pendingRotation.wallet_id);
+        if (!wallet) {
+            throw new ConfigError(`Wallet "${pendingRotation.wallet_id}" was not found for the pending key rotation.`);
+        }
+        if (wallet.type !== 'agentic') {
+            throw new ConfigError(`Wallet "${wallet.name}" is not an agentic wallet.`);
+        }
+
+        const validated = await this.validateAgenticWallet({
+            address: pendingRotation.wallet_address,
+            network: pendingRotation.network,
+            collectionAddress: pendingRotation.collection_address,
+            ownerAddress: pendingRotation.owner_address,
+        });
+        if (!validated.operatorPublicKey) {
+            throw new ConfigError(`Agentic wallet "${wallet.name}" is missing an on-chain operator public key.`);
+        }
+        if (
+            validated.operatorPublicKey.trim().toLowerCase() !==
+            pendingRotation.operator_public_key.trim().toLowerCase()
+        ) {
+            throw new ConfigError(
+                `On-chain operator public key for "${wallet.name}" does not match pending rotation ${rotationId}.`,
+            );
+        }
+
+        const updatedWallet: StoredAgenticWallet = {
+            ...wallet,
+            operator_private_key: pendingRotation.operator_private_key,
+            operator_public_key: pendingRotation.operator_public_key,
+        };
+        const nextConfig = removePendingAgenticKeyRotation(
+            upsertWallet(config, updatedWallet, { setActive: wallet.id === config.active_wallet_id }),
+            { id: pendingRotation.id },
+        );
+        saveConfig(nextConfig);
+
+        return {
+            wallet: updatedWallet,
+            pendingRotation,
+            dashboardUrl: buildAgenticDashboardLink(wallet.address),
+        };
+    }
+
+    async cancelAgenticKeyRotation(rotationId: string): Promise<void> {
+        const config = await this.loadConfig();
+        saveConfig(removePendingAgenticKeyRotation(config, { id: rotationId }));
+    }
+
     async listPendingAgenticSetups(): Promise<PendingAgenticDeployment[]> {
         return listPendingAgenticDeployments(await this.loadConfig());
     }
@@ -442,7 +464,11 @@ export class WalletRegistryService {
         return deployment;
     }
 
-    async removePendingAgenticSetup(input: { id?: string; network?: TonNetwork; operatorPublicKey?: string }): Promise<void> {
+    async removePendingAgenticSetup(input: {
+        id?: string;
+        network?: TonNetwork;
+        operatorPublicKey?: string;
+    }): Promise<void> {
         const config = await this.loadConfig();
         saveConfig(removePendingAgenticDeployment(config, input));
     }
@@ -465,7 +491,10 @@ export class WalletRegistryService {
         if (!input.validatedWallet.operatorPublicKey) {
             throw new ConfigError('Validated agentic wallet is missing operator public key.');
         }
-        if (pending.operator_public_key.trim().toLowerCase() !== input.validatedWallet.operatorPublicKey.trim().toLowerCase()) {
+        if (
+            pending.operator_public_key.trim().toLowerCase() !==
+            input.validatedWallet.operatorPublicKey.trim().toLowerCase()
+        ) {
             throw new ConfigError('Pending operator key does not match the target agentic wallet.');
         }
 

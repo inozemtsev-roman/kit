@@ -18,7 +18,10 @@ import type { IContactResolver } from './types/contacts.js';
 import type { NetworkConfig } from './services/McpWalletService.js';
 import { McpWalletService } from './services/McpWalletService.js';
 import { WalletRegistryService } from './services/WalletRegistryService.js';
-import { AgenticSetupSessionManager, ConfigBackedAgenticSetupSessionStore } from './services/AgenticSetupSessionManager.js';
+import {
+    AgenticSetupSessionManager,
+    ConfigBackedAgenticSetupSessionStore,
+} from './services/AgenticSetupSessionManager.js';
 import { AgenticOnboardingService } from './services/AgenticOnboardingService.js';
 import {
     createMcpAddressTools,
@@ -120,7 +123,7 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
         registerTool('send_ton', transferTools.send_ton);
         registerTool('send_jetton', transferTools.send_jetton);
         registerTool('send_raw_transaction', transferTools.send_raw_transaction);
-        registerTool('deploy_agentic_subwallet', agenticTools.deploy_agentic_subwallet);
+        registerTool('agentic_deploy_subwallet', agenticTools.deploy_agentic_subwallet);
         registerTool('get_transaction_status', transactionTools.get_transaction_status);
         registerTool('get_swap_quote', swapTools.get_swap_quote);
         registerTool('get_nfts', nftTools.get_nfts);
@@ -159,7 +162,6 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
     const onboarding = new AgenticOnboardingService(registry, agenticSessionManager);
     const onboardingTools = createMcpAgenticOnboardingTools(onboarding);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const registerRegistryWalletTool = (
         name: string,
         tool: any,
@@ -187,8 +189,16 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
         );
     };
 
-    registerRegistryWalletTool('get_wallet', balanceToolDefs.get_wallet, (service) => createMcpBalanceTools(service).get_wallet);
-    registerRegistryWalletTool('get_balance', balanceToolDefs.get_balance, (service) => createMcpBalanceTools(service).get_balance);
+    registerRegistryWalletTool(
+        'get_wallet',
+        balanceToolDefs.get_wallet,
+        (service) => createMcpBalanceTools(service).get_wallet,
+    );
+    registerRegistryWalletTool(
+        'get_balance',
+        balanceToolDefs.get_balance,
+        (service) => createMcpBalanceTools(service).get_balance,
+    );
     registerRegistryWalletTool(
         'get_balance_by_address',
         addressToolDefs.get_balance_by_address,
@@ -199,7 +209,11 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
         balanceToolDefs.get_jetton_balance,
         (service) => createMcpBalanceTools(service).get_jetton_balance,
     );
-    registerRegistryWalletTool('get_jettons', balanceToolDefs.get_jettons, (service) => createMcpBalanceTools(service).get_jettons);
+    registerRegistryWalletTool(
+        'get_jettons',
+        balanceToolDefs.get_jettons,
+        (service) => createMcpBalanceTools(service).get_jettons,
+    );
     registerRegistryWalletTool(
         'get_jettons_by_address',
         addressToolDefs.get_jettons_by_address,
@@ -239,7 +253,7 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
         { requiresSigning: true },
     );
     registerRegistryWalletTool(
-        'deploy_agentic_subwallet',
+        'agentic_deploy_subwallet',
         agenticToolDefs.deploy_agentic_subwallet,
         (service) => createMcpAgenticTools(service).deploy_agentic_subwallet,
         { requiresSigning: true },
@@ -261,13 +275,14 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
         (service) => createMcpAddressTools(service).get_nfts_by_address,
     );
     registerRegistryWalletTool('get_nft', nftToolDefs.get_nft, (service) => createMcpNftTools(service).get_nft);
+    registerRegistryWalletTool('send_nft', nftToolDefs.send_nft, (service) => createMcpNftTools(service).send_nft, {
+        requiresSigning: true,
+    });
     registerRegistryWalletTool(
-        'send_nft',
-        nftToolDefs.send_nft,
-        (service) => createMcpNftTools(service).send_nft,
-        { requiresSigning: true },
+        'resolve_dns',
+        dnsToolDefs.resolve_dns,
+        (service) => createMcpDnsTools(service).resolve_dns,
     );
-    registerRegistryWalletTool('resolve_dns', dnsToolDefs.resolve_dns, (service) => createMcpDnsTools(service).resolve_dns);
     registerRegistryWalletTool(
         'back_resolve_dns',
         dnsToolDefs.back_resolve_dns,
@@ -277,23 +292,27 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
     registerTool('list_wallets', walletManagementTools.list_wallets);
     registerTool('get_current_wallet', walletManagementTools.get_current_wallet);
     registerTool('set_active_wallet', walletManagementTools.set_active_wallet);
-    registerTool('import_wallet_from_mnemonic', walletManagementTools.import_wallet_from_mnemonic);
-    registerTool('import_wallet_from_private_key', walletManagementTools.import_wallet_from_private_key);
     registerTool('remove_wallet', walletManagementTools.remove_wallet);
-    registerTool('reset_wallet_config', walletManagementTools.reset_wallet_config);
     registerTool('get_network_config', walletManagementTools.get_network_config);
     registerTool('set_network_config', walletManagementTools.set_network_config);
-    registerTool('validate_agentic_wallet', walletManagementTools.validate_agentic_wallet);
-    registerTool('preflight_validate_agentic_wallet', walletManagementTools.preflight_validate_agentic_wallet);
-    registerTool('list_agentic_wallets_by_owner', walletManagementTools.list_agentic_wallets_by_owner);
-    registerTool('add_agent_wallet', walletManagementTools.add_agent_wallet);
-    registerTool('set_agentic_operator_private_key', walletManagementTools.set_agentic_operator_private_key);
+    registerTool('agentic_validate_wallet', walletManagementTools.validate_agentic_wallet);
+    registerTool('agentic_preflight_validate_wallet', walletManagementTools.preflight_validate_agentic_wallet);
+    registerTool('agentic_list_wallets_by_owner', walletManagementTools.list_agentic_wallets_by_owner);
+    registerTool('agentic_add_wallet', walletManagementTools.add_agent_wallet);
+    registerTool('agentic_rotate_operator_key', walletManagementTools.rotate_operator_key);
+    registerTool(
+        'agentic_list_pending_operator_key_rotations',
+        walletManagementTools.list_pending_operator_key_rotations,
+    );
+    registerTool('agentic_get_pending_operator_key_rotation', walletManagementTools.get_pending_operator_key_rotation);
+    registerTool('agentic_complete_rotate_operator_key', walletManagementTools.complete_rotate_operator_key);
+    registerTool('agentic_cancel_rotate_operator_key', walletManagementTools.cancel_rotate_operator_key);
 
-    registerTool('start_agentic_root_wallet_setup', onboardingTools.start_agentic_root_wallet_setup);
-    registerTool('list_pending_agentic_root_wallet_setups', onboardingTools.list_pending_agentic_root_wallet_setups);
-    registerTool('get_agentic_root_wallet_setup', onboardingTools.get_agentic_root_wallet_setup);
-    registerTool('complete_agentic_root_wallet_setup', onboardingTools.complete_agentic_root_wallet_setup);
-    registerTool('cancel_agentic_root_wallet_setup', onboardingTools.cancel_agentic_root_wallet_setup);
+    registerTool('agentic_start_root_wallet_setup', onboardingTools.start_agentic_root_wallet_setup);
+    registerTool('agentic_list_pending_root_wallet_setups', onboardingTools.list_pending_agentic_root_wallet_setups);
+    registerTool('agentic_get_root_wallet_setup', onboardingTools.get_agentic_root_wallet_setup);
+    registerTool('agentic_complete_root_wallet_setup', onboardingTools.complete_agentic_root_wallet_setup);
+    registerTool('agentic_cancel_root_wallet_setup', onboardingTools.cancel_agentic_root_wallet_setup);
 
     return server;
 }

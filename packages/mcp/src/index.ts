@@ -43,6 +43,10 @@ export { WalletRegistryService } from './services/WalletRegistryService.js';
 export { AgenticSetupSessionManager } from './services/AgenticSetupSessionManager.js';
 export { AgenticOnboardingService } from './services/AgenticOnboardingService.js';
 export type {
+    StartAgenticKeyRotationResult,
+    CompleteAgenticKeyRotationResult,
+} from './services/WalletRegistryService.js';
+export type {
     McpWalletServiceConfig,
     JettonInfoResult,
     JettonMetadataResult,
@@ -60,9 +64,14 @@ export type {
     StoredAgenticWallet,
     StoredWallet,
     PendingAgenticDeployment,
+    PendingAgenticKeyRotation,
     TonConfig,
 } from './registry/config.js';
-export type { AgenticDeployCallbackPayload, AgenticSetupSession, AgenticSetupStatus } from './services/AgenticSetupSessionManager.js';
+export type {
+    AgenticDeployCallbackPayload,
+    AgenticSetupSession,
+    AgenticSetupStatus,
+} from './services/AgenticSetupSessionManager.js';
 
 // ===========================================
 // Contracts

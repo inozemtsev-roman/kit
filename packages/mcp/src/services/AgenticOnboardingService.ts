@@ -6,10 +6,12 @@
  *
  */
 
-import { normalizeNetwork, type PendingAgenticDeployment, type StoredAgenticWallet, type TonNetwork } from '../registry/config.js';
+import { normalizeNetwork } from '../registry/config.js';
+import type { PendingAgenticDeployment, StoredAgenticWallet, TonNetwork } from '../registry/config.js';
 import { AgenticWalletValidationError, buildAgenticCreateDeepLink, generateOperatorKeyPair } from '../utils/agentic.js';
-import { WalletRegistryService } from './WalletRegistryService.js';
-import { AgenticSetupSessionManager, type AgenticDeployCallbackPayload, type AgenticSetupSession } from './AgenticSetupSessionManager.js';
+import type { WalletRegistryService } from './WalletRegistryService.js';
+import type { AgenticSetupSessionManager } from './AgenticSetupSessionManager.js';
+import type { AgenticDeployCallbackPayload, AgenticSetupSession } from './AgenticSetupSessionManager.js';
 
 function getDefaultAgenticSource(source?: string): string {
     const trimmed = source?.trim();
@@ -23,7 +25,9 @@ function getDefaultAgenticName(name: string | undefined, operatorPublicKey: stri
 
 function payloadMatchesNetwork(payload: AgenticDeployCallbackPayload, network: TonNetwork): boolean {
     const chainId = String(payload.network?.chainId ?? '');
-    return network === 'mainnet' ? chainId === '-239' || chainId === 'mainnet' : chainId === '-3' || chainId === 'testnet';
+    return network === 'mainnet'
+        ? chainId === '-239' || chainId === 'mainnet'
+        : chainId === '-3' || chainId === 'testnet';
 }
 
 export interface AgenticRootWalletSetupStatus {
@@ -109,11 +113,7 @@ export class AgenticOnboardingService {
         };
     }
 
-    async completeRootWalletSetup(input: {
-        setupId: string;
-        walletAddress?: string;
-        ownerAddress?: string;
-    }): Promise<{
+    async completeRootWalletSetup(input: { setupId: string; walletAddress?: string; ownerAddress?: string }): Promise<{
         wallet: StoredAgenticWallet;
         resolvedWalletAddress: string;
         usedCallbackPayload: boolean;

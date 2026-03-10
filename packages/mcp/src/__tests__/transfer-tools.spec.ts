@@ -10,7 +10,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createMcpTransferTools } from '../tools/transfer-tools.js';
 
-function parseToolResult(result: Awaited<ReturnType<ReturnType<typeof createMcpTransferTools>['send_ton']['handler']>>) {
+function parseToolResult(
+    result: Awaited<ReturnType<ReturnType<typeof createMcpTransferTools>['send_ton']['handler']>>,
+) {
     const first = result.content[0];
     if (!first || first.type !== 'text') {
         throw new Error('Expected text tool response');

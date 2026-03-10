@@ -13,18 +13,20 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-    deriveStandardWalletAddress: vi.fn(),
     createMcpWalletServiceFromStoredWallet: vi.fn(),
     createApiClient: vi.fn(),
-    preflightValidateAgenticWalletAddress: vi.fn(),
     validateAgenticWalletAddress: vi.fn(),
     listAgenticWalletsByOwner: vi.fn(),
     resolveOperatorCredentials: vi.fn(),
+    generateOperatorKeyPair: vi.fn(),
     buildAgenticDashboardLink: vi.fn((address: string) => `https://dashboard.test/agent/${address}`),
+    buildAgenticChangeKeyDeepLink: vi.fn(
+        (address: string, publicKey: string) =>
+            `https://dashboard.test/agent/${address}?action=change-public-key&nextOperatorPublicKey=${publicKey}`,
+    ),
 }));
 
 vi.mock('../runtime/wallet-runtime.js', () => ({
-    deriveStandardWalletAddress: mocks.deriveStandardWalletAddress,
     createMcpWalletServiceFromStoredWallet: mocks.createMcpWalletServiceFromStoredWallet,
 }));
 
@@ -33,11 +35,12 @@ vi.mock('../utils/ton-client.js', () => ({
 }));
 
 vi.mock('../utils/agentic.js', () => ({
-    preflightValidateAgenticWalletAddress: mocks.preflightValidateAgenticWalletAddress,
     validateAgenticWalletAddress: mocks.validateAgenticWalletAddress,
     listAgenticWalletsByOwner: mocks.listAgenticWalletsByOwner,
     resolveOperatorCredentials: mocks.resolveOperatorCredentials,
+    generateOperatorKeyPair: mocks.generateOperatorKeyPair,
     buildAgenticDashboardLink: mocks.buildAgenticDashboardLink,
+    buildAgenticChangeKeyDeepLink: mocks.buildAgenticChangeKeyDeepLink,
 }));
 
 import {
@@ -48,8 +51,8 @@ import {
     createStandardWalletRecord,
     loadConfig,
     saveConfig,
-    type StoredWallet,
 } from '../registry/config.js';
+import type { StoredWallet } from '../registry/config.js';
 import { WalletRegistryService } from '../services/WalletRegistryService.js';
 
 describe('WalletRegistryService', () => {
@@ -64,28 +67,34 @@ describe('WalletRegistryService', () => {
         process.env.TON_CONFIG_PATH = join(tempDir, 'config.json');
         delete process.env.TONCENTER_API_KEY;
 
-        mocks.deriveStandardWalletAddress.mockReset();
         mocks.createMcpWalletServiceFromStoredWallet.mockReset();
         mocks.createApiClient.mockReset();
-        mocks.preflightValidateAgenticWalletAddress.mockReset();
         mocks.validateAgenticWalletAddress.mockReset();
         mocks.listAgenticWalletsByOwner.mockReset();
         mocks.resolveOperatorCredentials.mockReset();
+        mocks.generateOperatorKeyPair.mockReset();
         mocks.buildAgenticDashboardLink.mockClear();
+        mocks.buildAgenticChangeKeyDeepLink.mockClear();
         mocks.createApiClient.mockReturnValue({ kind: 'api-client' });
-        mocks.preflightValidateAgenticWalletAddress.mockResolvedValue({
+        mocks.validateAgenticWalletAddress.mockResolvedValue({
             address: agentAddress,
-            network: 'mainnet',
-            accountStatus: 'active',
-            hasCode: true,
-            codeHash: 'abc',
-            expectedCodeHash: 'abc',
-            contractType: 'agentic_wallet',
+            balanceNano: '0',
+            balanceTon: '0.0000',
+            ownerAddress,
+            operatorPublicKey: '0xabc',
+            originOperatorPublicKey: '0xabc',
+            collectionAddress: DEFAULT_AGENTIC_COLLECTION_ADDRESS,
+            deployedByUser: true,
+            name: 'Agent',
         });
         mocks.resolveOperatorCredentials.mockImplementation(async (privateKey: string, expectedPublicKey?: string) => ({
             privateKey: `normalized:${privateKey}`,
             publicKey: expectedPublicKey ?? '0xresolved',
         }));
+        mocks.generateOperatorKeyPair.mockResolvedValue({
+            privateKey: '0xgenerated-private',
+            publicKey: '0xgenerated-public',
+        });
     });
 
     afterEach(() => {
@@ -95,32 +104,6 @@ describe('WalletRegistryService', () => {
             delete process.env.TON_CONFIG_PATH;
         }
         rmSync(tempDir, { recursive: true, force: true });
-    });
-
-    it('imports a standard wallet from mnemonic and makes it active', async () => {
-        mocks.deriveStandardWalletAddress.mockResolvedValue(mainAddress);
-        const registry = new WalletRegistryService();
-
-        const wallet = await registry.importWalletFromMnemonic({
-            mnemonic: 'abandon '.repeat(23) + 'about',
-            name: 'Primary wallet',
-        });
-
-        expect(wallet.name).toBe('Primary wallet');
-        expect(wallet.type).toBe('standard');
-        expect(wallet.network).toBe('mainnet');
-        expect(wallet.wallet_version).toBe('v5r1');
-        expect(mocks.deriveStandardWalletAddress).toHaveBeenCalledWith({
-            mnemonic: 'abandon '.repeat(23) + 'about',
-            privateKey: undefined,
-            network: 'mainnet',
-            walletVersion: 'v5r1',
-            toncenterApiKey: undefined,
-        });
-
-        const stored = loadConfig();
-        expect(stored?.active_wallet_id).toBe(wallet.id);
-        expect(stored?.wallets).toEqual([expect.objectContaining({ id: wallet.id, address: wallet.address })]);
     });
 
     it('persists per-network config updates', async () => {
@@ -149,7 +132,7 @@ describe('WalletRegistryService', () => {
         });
     });
 
-    it('runs agentic wallet preflight checks with the selected network', async () => {
+    it('runs full agentic wallet validation through the preflight alias', async () => {
         const registry = new WalletRegistryService();
 
         const result = await registry.preflightValidateAgenticWallet({
@@ -157,14 +140,17 @@ describe('WalletRegistryService', () => {
             network: 'testnet',
         });
 
-        expect(mocks.preflightValidateAgenticWalletAddress).toHaveBeenCalledWith({
+        expect(mocks.validateAgenticWalletAddress).toHaveBeenCalledWith({
             client: { kind: 'api-client' },
             address: agentAddress,
+            collectionAddress: expect.any(String),
             network: 'testnet',
+            ownerAddress: undefined,
         });
         expect(result).toMatchObject({
             address: agentAddress,
-            contractType: 'agentic_wallet',
+            ownerAddress,
+            collectionAddress: DEFAULT_AGENTIC_COLLECTION_ADDRESS,
         });
     });
 
@@ -328,32 +314,6 @@ describe('WalletRegistryService', () => {
         expect(stored?.pending_agentic_deployments).toBeUndefined();
     });
 
-    it('stores operator private key on an imported agentic wallet', async () => {
-        const wallet = createAgenticWalletRecord({
-            name: 'Agent wallet',
-            network: 'mainnet',
-            address: agentAddress,
-            ownerAddress,
-            operatorPublicKey: '0xbeef',
-        });
-        saveConfig({
-            ...createEmptyConfig(),
-            active_wallet_id: wallet.id,
-            wallets: [wallet],
-        });
-
-        const registry = new WalletRegistryService();
-        const updated = await registry.setAgenticOperatorPrivateKey({
-            selector: wallet.id,
-            privateKey: '0x1111',
-        });
-
-        expect(mocks.resolveOperatorCredentials).toHaveBeenCalledWith('0x1111', '0xbeef');
-        expect(updated.operator_private_key).toBe('normalized:0x1111');
-        expect(updated.operator_public_key).toBe('0xbeef');
-        expect(loadConfig()?.wallets[0]).toEqual(expect.objectContaining({ operator_private_key: 'normalized:0x1111' }));
-    });
-
     it('completes a pending root-agent setup and makes the imported wallet active', async () => {
         const pending = createPendingAgenticDeployment({
             network: 'mainnet',
@@ -397,6 +357,131 @@ describe('WalletRegistryService', () => {
         expect(stored?.active_wallet_id).toBe(wallet.id);
         expect(stored?.wallets).toEqual([expect.objectContaining({ id: wallet.id })]);
         expect(stored?.pending_agentic_deployments).toBeUndefined();
+    });
+
+    it('starts an agentic key rotation and stores only a pending draft until completion', async () => {
+        const wallet = createAgenticWalletRecord({
+            name: 'Rotatable agent',
+            network: 'mainnet',
+            address: agentAddress,
+            ownerAddress,
+            operatorPrivateKey: '0xold-private',
+            operatorPublicKey: '0xold-public',
+            collectionAddress: ownerAddress,
+        });
+        saveConfig({
+            ...createEmptyConfig(),
+            active_wallet_id: wallet.id,
+            wallets: [wallet],
+        });
+
+        const registry = new WalletRegistryService();
+        const result = await registry.startAgenticKeyRotation({});
+
+        expect(result.wallet.id).toBe(wallet.id);
+        expect(result.updatedExisting).toBe(false);
+        expect(result.dashboardUrl).toContain('action=change-public-key');
+        expect(result.pendingRotation).toMatchObject({
+            wallet_id: wallet.id,
+            operator_private_key: '0xgenerated-private',
+            operator_public_key: '0xgenerated-public',
+        });
+
+        const stored = loadConfig();
+        expect(stored?.wallets[0]).toMatchObject({
+            id: wallet.id,
+            operator_private_key: '0xold-private',
+            operator_public_key: '0xold-public',
+        });
+        expect(stored?.pending_agentic_key_rotations).toEqual([
+            expect.objectContaining({
+                id: result.pendingRotation.id,
+                wallet_id: wallet.id,
+                operator_private_key: '0xgenerated-private',
+                operator_public_key: '0xgenerated-public',
+            }),
+        ]);
+    });
+
+    it('completes an agentic key rotation after the on-chain operator public key changes', async () => {
+        const wallet = createAgenticWalletRecord({
+            name: 'Rotatable agent',
+            network: 'mainnet',
+            address: agentAddress,
+            ownerAddress,
+            operatorPrivateKey: '0xold-private',
+            operatorPublicKey: '0xold-public',
+            collectionAddress: ownerAddress,
+        });
+        saveConfig({
+            ...createEmptyConfig(),
+            active_wallet_id: wallet.id,
+            wallets: [wallet],
+        });
+
+        const registry = new WalletRegistryService();
+        const started = await registry.startAgenticKeyRotation({
+            walletSelector: wallet.id,
+        });
+        mocks.validateAgenticWalletAddress.mockResolvedValue({
+            address: agentAddress,
+            balanceNano: '42',
+            balanceTon: '0.000000042',
+            ownerAddress,
+            operatorPublicKey: '0xgenerated-public',
+            originOperatorPublicKey: '0x1234',
+            collectionAddress: ownerAddress,
+            deployedByUser: true,
+            name: 'On-chain agent',
+        });
+
+        const completed = await registry.completeAgenticKeyRotation(started.pendingRotation.id);
+
+        expect(completed.wallet).toMatchObject({
+            id: wallet.id,
+            operator_private_key: '0xgenerated-private',
+            operator_public_key: '0xgenerated-public',
+        });
+        expect(completed.dashboardUrl).toBe(`https://dashboard.test/agent/${wallet.address}`);
+        expect(loadConfig()?.pending_agentic_key_rotations).toBeUndefined();
+    });
+
+    it('rejects agentic key rotation completion when the on-chain operator public key does not match', async () => {
+        const wallet = createAgenticWalletRecord({
+            name: 'Rotatable agent',
+            network: 'mainnet',
+            address: agentAddress,
+            ownerAddress,
+            operatorPrivateKey: '0xold-private',
+            operatorPublicKey: '0xold-public',
+            collectionAddress: ownerAddress,
+        });
+        saveConfig({
+            ...createEmptyConfig(),
+            active_wallet_id: wallet.id,
+            wallets: [wallet],
+        });
+
+        const registry = new WalletRegistryService();
+        const started = await registry.startAgenticKeyRotation({
+            walletSelector: wallet.id,
+            operatorPrivateKey: '0xmanual-private',
+        });
+        mocks.validateAgenticWalletAddress.mockResolvedValue({
+            address: agentAddress,
+            balanceNano: '42',
+            balanceTon: '0.000000042',
+            ownerAddress,
+            operatorPublicKey: '0xunexpected',
+            originOperatorPublicKey: '0x1234',
+            collectionAddress: ownerAddress,
+            deployedByUser: true,
+        });
+
+        await expect(registry.completeAgenticKeyRotation(started.pendingRotation.id)).rejects.toThrow(
+            /does not match pending rotation/i,
+        );
+        expect(loadConfig()?.pending_agentic_key_rotations).toHaveLength(1);
     });
 
     it('rejects pending root-agent completion when operator public key does not match the pending setup', async () => {
@@ -483,7 +568,7 @@ describe('WalletRegistryService', () => {
         expect(mocks.createApiClient).toHaveBeenNthCalledWith(2, 'mainnet', undefined);
     });
 
-    it('removes wallets and rotates the active wallet', async () => {
+    it('soft-deletes wallets and rotates the active wallet to the next visible one', async () => {
         const first = createStandardWalletRecord({
             name: 'Primary wallet',
             network: 'mainnet',
@@ -505,8 +590,12 @@ describe('WalletRegistryService', () => {
         const registry = new WalletRegistryService();
         const result = await registry.removeWallet(first.id);
 
-        expect(result.removed.id).toBe(first.id);
+        expect(result.removedWalletId).toBe(first.id);
         expect(result.activeWalletId).toBe(second.id);
-        expect(loadConfig()?.wallets.map((wallet: StoredWallet) => wallet.id)).toEqual([second.id]);
+        expect(loadConfig()?.wallets).toEqual([
+            expect.objectContaining({ id: first.id, removed: true }),
+            expect.objectContaining({ id: second.id }),
+        ]);
+        await expect(registry.listWallets()).resolves.toEqual([expect.objectContaining({ id: second.id })]);
     });
 });
