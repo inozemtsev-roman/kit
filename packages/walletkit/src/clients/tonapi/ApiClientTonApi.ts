@@ -37,7 +37,11 @@ import type {
 } from '../../api/models';
 import type { ToncenterEmulationResult } from '../../utils/toncenterEmulation';
 import type { FullAccountState } from '../../types/toncenter/api';
-import type { EmulationTraceNode, ToncenterResponseJettonMasters, ToncenterTracesResponse } from '../../types/toncenter/emulation';
+import type {
+    EmulationTraceNode,
+    ToncenterResponseJettonMasters,
+    ToncenterTracesResponse,
+} from '../../types/toncenter/emulation';
 import { BaseApiClient } from '../BaseApiClient';
 import type { BaseApiClientConfig } from '../BaseApiClient';
 import { TonClientError } from '../TonClientError';
@@ -195,11 +199,14 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
         const limit = Math.max(1, Math.min(_request.limit ?? 10, 100));
         const offset = Math.max(0, _request.offset ?? 0);
 
-        const response = await this.getJson<TonApiTransactionsResponse>(`/v2/blockchain/accounts/${address}/transactions`, {
-            limit,
-            offset,
-            sort_order: 'desc',
-        });
+        const response = await this.getJson<TonApiTransactionsResponse>(
+            `/v2/blockchain/accounts/${address}/transactions`,
+            {
+                limit,
+                offset,
+                sort_order: 'desc',
+            },
+        );
 
         const transactions = (response.transactions ?? []).map((tx) => this.mapTonApiTransaction(tx));
 
@@ -273,7 +280,9 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
         for (const messageHash of _request.externalMessageHash) {
             const normalizedHash = this.normalizeTonApiId(messageHash);
             try {
-                const tx = await this.getJson<TonApiTransaction>(`/v2/blockchain/messages/${normalizedHash}/transaction`);
+                const tx = await this.getJson<TonApiTransaction>(
+                    `/v2/blockchain/messages/${normalizedHash}/transaction`,
+                );
                 return await this.getTrace({ traceId: [tx.hash] });
             } catch (error) {
                 if (error instanceof TonClientError && error.status === 404) {
@@ -427,7 +436,7 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
                     : undefined,
             computePhase: {
                 isSkipped: raw.compute_phase?.skipped ?? false,
-                isSuccess: raw.compute_phase?.success ?? (raw.success ?? true),
+                isSuccess: raw.compute_phase?.success ?? raw.success ?? true,
                 isMessageStateUsed: false,
                 isAccountActivated: false,
                 gasFees: String(raw.compute_phase?.gas_fees ?? 0),
@@ -438,7 +447,7 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
                 vmStepsNumber: raw.compute_phase?.vm_steps ?? 0,
             },
             action: {
-                isSuccess: raw.action_phase?.success ?? (raw.success ?? true),
+                isSuccess: raw.action_phase?.success ?? raw.success ?? true,
                 isValid: true,
                 hasNoFunds: false,
                 statusChange: 'unchanged',
@@ -463,7 +472,7 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
             traceTransactions.map((tx) => [tx.hash, this.mapTonApiTraceTransaction(tx)]),
         );
         const transactionsOrder = [...traceTransactions]
-            .sort((a, b) => BigInt(a.lt ?? 0) < BigInt(b.lt ?? 0) ? -1 : 1)
+            .sort((a, b) => (BigInt(a.lt ?? 0) < BigInt(b.lt ?? 0) ? -1 : 1))
             .map((tx) => tx.hash);
 
         const lts = traceTransactions.map((tx) => BigInt(tx.lt ?? 0));
@@ -556,7 +565,7 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
                         : undefined,
                 compute_ph: {
                     skipped: raw.compute_phase?.skipped ?? false,
-                    success: raw.compute_phase?.success ?? (raw.success ?? true),
+                    success: raw.compute_phase?.success ?? raw.success ?? true,
                     msg_state_used: false,
                     account_activated: false,
                     gas_fees: String(raw.compute_phase?.gas_fees ?? 0),
@@ -569,7 +578,7 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
                     vm_final_state_hash: '',
                 },
                 action: {
-                    success: raw.action_phase?.success ?? (raw.success ?? true),
+                    success: raw.action_phase?.success ?? raw.success ?? true,
                     valid: true,
                     no_funds: false,
                     status_change: 'unchanged',
@@ -631,10 +640,8 @@ export class ApiClientTonApi extends BaseApiClient implements ApiClient {
             value_extra_currencies: extraCurrencies,
             fwd_fee: raw.fwd_fee !== undefined && raw.fwd_fee !== null ? String(raw.fwd_fee) : null,
             ihr_fee: raw.ihr_fee !== undefined && raw.ihr_fee !== null ? String(raw.ihr_fee) : null,
-            created_lt:
-                raw.created_lt !== undefined && raw.created_lt !== null ? String(raw.created_lt) : null,
-            created_at:
-                raw.created_at !== undefined && raw.created_at !== null ? String(raw.created_at) : null,
+            created_lt: raw.created_lt !== undefined && raw.created_lt !== null ? String(raw.created_lt) : null,
+            created_at: raw.created_at !== undefined && raw.created_at !== null ? String(raw.created_at) : null,
             opcode: raw.op_code ?? null,
             ihr_disabled: raw.ihr_disabled ?? null,
             bounce: raw.bounce ?? null,

@@ -12,34 +12,25 @@
   },
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
+      "types": "./dist/esm/index.d.ts",
+      "node": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/esm/index.js"
     },
     "./bridge": {
-      "import": {
-        "types": "./dist/esm/bridge/JSBridgeInjector.d.ts",
-        "default": "./dist/esm/bridge/JSBridgeInjector.js"
-      },
-      "require": {
-        "types": "./dist/cjs/bridge/JSBridgeInjector.d.ts",
-        "default": "./dist/cjs/bridge/JSBridgeInjector.js"
-      }
+      "types": "./dist/esm/bridge/JSBridgeInjector.d.ts",
+      "node": "./dist/cjs/bridge/JSBridgeInjector.js",
+      "import": "./dist/esm/bridge/JSBridgeInjector.js",
+      "require": "./dist/cjs/bridge/JSBridgeInjector.js",
+      "default": "./dist/esm/bridge/JSBridgeInjector.js"
     },
     "./swap/omniston": {
-      "import": {
-        "types": "./dist/esm/defi/swap/omniston/index.d.ts",
-        "default": "./dist/esm/defi/swap/omniston/index.js"
-      },
-      "require": {
-        "types": "./dist/cjs/defi/swap/omniston/index.d.ts",
-        "default": "./dist/cjs/defi/swap/omniston/index.js"
-      }
+      "types": "./dist/esm/defi/swap/omniston/index.d.ts",
+      "node": "./dist/cjs/defi/swap/omniston/index.js",
+      "import": "./dist/esm/defi/swap/omniston/index.js",
+      "require": "./dist/cjs/defi/swap/omniston/index.js",
+      "default": "./dist/esm/defi/swap/omniston/index.js"
     }
   },
   "typesVersions": {
