@@ -6,7 +6,8 @@
  *
  */
 
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { useShallow } from 'zustand/react/shallow';
 import { useWalletStore } from '@demo/wallet-core';
 import { Base64NormalizeUrl, HexToBase64 } from '@ton/walletkit';
@@ -39,6 +40,13 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [limit] = useState(10);
+    const seenKeysRef = useRef<Set<string>>(new Set());
+    const hasShownListRef = useRef(false);
+
+    useEffect(() => {
+        seenKeysRef.current = new Set();
+        hasShownListRef.current = false;
+    }, [address]);
 
     // Load events when component mounts, address changes, or page changes
     useEffect(() => {
@@ -148,6 +156,12 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
         return combined;
     }, [pendingTransactions, eventItems, confirmedTraceIds, confirmedExternalHashes]);
 
+    // Reset seenKeys when first showing list so items animate (works with React Strict Mode double-mount)
+    if (!isInitialLoading && mergedItems.length > 0 && !hasShownListRef.current) {
+        hasShownListRef.current = true;
+        seenKeysRef.current = new Set();
+    }
+
     const header = !embedded && (
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">Recent Transactions</h3>
@@ -221,6 +235,18 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
                         className={`transition-opacity duration-200 ${embedded ? 'space-y-0' : 'space-y-3'} ${isPaginating ? 'opacity-50' : 'opacity-100'}`}
                     >
                         {mergedItems.map((item) => {
+                            const itemKey = item.type === 'pending' ? `pending-${item.data.traceId}` : item.traceId;
+                            const isNew = !seenKeysRef.current.has(itemKey);
+                            if (isNew) seenKeysRef.current.add(itemKey);
+
+                            const layoutTransition = { type: 'tween' as const, duration: 0.275 };
+                            const motionProps = {
+                                layout: true,
+                                initial: isNew ? { opacity: 0, y: -20 } : false,
+                                animate: { opacity: 1, y: 0 },
+                                transition: layoutTransition,
+                            };
+
                             if (item.type === 'pending') {
                                 const p = item.data;
                                 const preview = p.preview;
@@ -229,16 +255,17 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
                                 const finality = p.finality ?? 'pending';
                                 if (p.action) {
                                     return (
-                                        <ActionCard
-                                            key={`pending-${p.traceId}`}
-                                            action={p.action}
-                                            myAddress={address || ''}
-                                            timestamp={preview?.timestamp ?? Math.floor(Date.now() / 1000)}
-                                            traceLink={`/wallet/trace/${p.traceId}${p.externalHash ? ':' + p.externalHash : ''}`}
-                                            isPending={isPending}
-                                            finality={finality}
-                                            debugId={`pending-${p.traceId.slice(0, 12)}`}
-                                        />
+                                        <motion.div key={itemKey} {...motionProps}>
+                                            <ActionCard
+                                                action={p.action}
+                                                myAddress={address || ''}
+                                                timestamp={preview?.timestamp ?? Math.floor(Date.now() / 1000)}
+                                                traceLink={`/wallet/trace/${p.traceId}${p.externalHash ? ':' + p.externalHash : ''}`}
+                                                isPending={isPending}
+                                                finality={finality}
+                                                debugId={`pending-${p.traceId.slice(0, 12)}`}
+                                            />
+                                        </motion.div>
                                     );
                                 }
 
@@ -284,16 +311,17 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
                                 } as Action;
 
                                 return (
-                                    <ActionCard
-                                        key={`pending-${p.traceId}`}
-                                        action={pendingAction}
-                                        myAddress={address || ''}
-                                        timestamp={preview?.timestamp ?? Math.floor(Date.now() / 1000)}
-                                        traceLink={`/wallet/trace/${p.traceId}${p.externalHash ? ':' + p.externalHash : ''}`}
-                                        isPending={isPending}
-                                        finality={finality}
-                                        debugId={`pending-${p.traceId.slice(0, 12)}`}
-                                    />
+                                    <motion.div key={itemKey} {...motionProps}>
+                                        <ActionCard
+                                            action={pendingAction}
+                                            myAddress={address || ''}
+                                            timestamp={preview?.timestamp ?? Math.floor(Date.now() / 1000)}
+                                            traceLink={`/wallet/trace/${p.traceId}${p.externalHash ? ':' + p.externalHash : ''}`}
+                                            isPending={isPending}
+                                            finality={finality}
+                                            debugId={`pending-${p.traceId.slice(0, 12)}`}
+                                        />
+                                    </motion.div>
                                 );
                             }
 
@@ -304,15 +332,17 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
                             if (!ev.actions || ev.actions.length === 0) {
                                 const rowDebugId = `event-row-${traceId.slice(0, 12)}`;
                                 return (
-                                    <div key={traceId} className="relative">
-                                        <span
-                                            className="absolute top-1 right-1 text-[9px] font-mono text-gray-300 z-10"
-                                            title={rowDebugId}
-                                        >
-                                            {rowDebugId}
-                                        </span>
-                                        <TraceRow traceId={traceId} externalHash={externalHash} />
-                                    </div>
+                                    <motion.div key={itemKey} {...motionProps}>
+                                        <div className="relative">
+                                            <span
+                                                className="absolute top-1 right-1 text-[9px] font-mono text-gray-300 z-10"
+                                                title={rowDebugId}
+                                            >
+                                                {rowDebugId}
+                                            </span>
+                                            <TraceRow traceId={traceId} externalHash={externalHash} />
+                                        </div>
+                                    </motion.div>
                                 );
                             }
 
@@ -335,15 +365,16 @@ export const RecentTransactions: React.FC<RecentTransactionsProps> = memo(({ emb
                             const relevantAction = withMe.find(preferSender) || withMe[0] || ev.actions[0];
 
                             return (
-                                <ActionCard
-                                    key={traceId}
-                                    action={relevantAction}
-                                    myAddress={address || ''}
-                                    timestamp={ev.timestamp}
-                                    traceLink={`/wallet/trace/${traceId}`}
-                                    finality="done"
-                                    debugId={`event-${traceId.slice(0, 12)}`}
-                                />
+                                <motion.div key={itemKey} {...motionProps}>
+                                    <ActionCard
+                                        action={relevantAction}
+                                        myAddress={address || ''}
+                                        timestamp={ev.timestamp}
+                                        traceLink={`/wallet/trace/${traceId}`}
+                                        finality="done"
+                                        debugId={`event-${traceId.slice(0, 12)}`}
+                                    />
+                                </motion.div>
                             );
                         })}
                     </div>
