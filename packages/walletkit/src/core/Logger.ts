@@ -55,7 +55,6 @@ export interface LoggerConfig {
     enableTimestamp?: boolean;
     enableStackTrace?: boolean;
     parent?: Logger;
-    output?: 'auto' | 'console' | 'stderr';
 }
 
 /**
@@ -78,7 +77,6 @@ export class Logger {
         prefix: 'TonWalletKit',
         enableTimestamp: true,
         enableStackTrace: false,
-        output: 'auto',
     };
 
     constructor(config?: Partial<LoggerConfig>) {
@@ -207,17 +205,7 @@ export class Logger {
             logArgs.push(context);
         }
 
-        // In Node, stdout must stay clean for protocols like MCP stdio.
-        if (this.shouldWriteToStderr()) {
-            // eslint-disable-next-line no-console
-            console.error(...logArgs);
-            if (level === 'ERROR' && this.config.enableStackTrace) {
-                // eslint-disable-next-line no-console
-                console.trace();
-            }
-            return;
-        }
-
+        // Use appropriate console method based on level
         switch (level) {
             case 'DEBUG':
                 // eslint-disable-next-line no-console
@@ -240,18 +228,6 @@ export class Logger {
                 }
                 break;
         }
-    }
-
-    private shouldWriteToStderr(): boolean {
-        if (this.config.output === 'stderr') {
-            return true;
-        }
-
-        if (this.config.output === 'console') {
-            return false;
-        }
-
-        return typeof process !== 'undefined' && !!process.versions?.node;
     }
 }
 
