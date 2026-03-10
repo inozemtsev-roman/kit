@@ -38,12 +38,6 @@ import { CallForSuccess } from '../../utils/retry';
 import { globalLogger } from '../../core/Logger';
 import type { DNSRecordsResponseV3 } from '../../types/toncenter/v3/DNSRecordsResponseV3';
 import { toDnsRecords } from '../../types/toncenter/v3/DNSRecordsResponseV3';
-import {
-    DnsCategory,
-    dnsResolve,
-    ROOT_DNS_RESOLVER_MAINNET,
-    ROOT_DNS_RESOLVER_TESTNET,
-} from '../../types/toncenter/dnsResolve';
 import { toAddressBook, toEvent } from '../../types/toncenter/AccountEvent';
 import { Network } from '../../api/models';
 import type {
@@ -76,8 +70,6 @@ export interface ApiClientConfig extends BaseApiClientConfig {
 }
 
 export class ApiClientToncenter extends BaseApiClient implements ApiClient {
-    private readonly dnsResolver: string;
-
     constructor(config: ApiClientConfig = {}) {
         const defaultEndpoint =
             config.network?.chainId === Network.mainnet().chainId
@@ -85,11 +77,6 @@ export class ApiClientToncenter extends BaseApiClient implements ApiClient {
                 : 'https://testnet.toncenter.com';
 
         super(config, defaultEndpoint);
-
-        const dnsResolver =
-            this.network?.chainId === Network.mainnet().chainId ? ROOT_DNS_RESOLVER_MAINNET : ROOT_DNS_RESOLVER_TESTNET;
-
-        this.dnsResolver = config.dnsResolver ?? dnsResolver;
     }
 
     protected appendAuthHeaders(headers: Headers): void {
@@ -303,10 +290,18 @@ export class ApiClientToncenter extends BaseApiClient implements ApiClient {
     }
 
     async resolveDnsWallet(domain: string): Promise<string | null> {
-        const result = await dnsResolve(this, domain, DnsCategory.Wallet, this.dnsResolver);
-        if (result && result.value) {
-            return result.value;
+        const response = toDnsRecords(
+            await this.getJson<DNSRecordsResponseV3>('/api/v3/dns/records', {
+                domain,
+                limit: 1,
+                offset: 0,
+            }),
+        );
+
+        if (response.records.length > 0 && response.records[0].dnsWallet) {
+            return response.records[0].dnsWallet;
         }
+
         return null;
     }
 
@@ -314,6 +309,7 @@ export class ApiClientToncenter extends BaseApiClient implements ApiClient {
         if (wallet instanceof Address) {
             wallet = wallet.toString();
         }
+
         const response = toDnsRecords(
             await this.getJson<DNSRecordsResponseV3>('/api/v3/dns/records', {
                 wallet,
@@ -321,9 +317,11 @@ export class ApiClientToncenter extends BaseApiClient implements ApiClient {
                 offset: 0,
             }),
         );
+
         if (response.records.length > 0) {
             return response.records[0].domain;
         }
+
         return null;
     }
 

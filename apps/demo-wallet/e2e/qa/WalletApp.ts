@@ -26,7 +26,7 @@ export abstract class WalletApp {
     constructor(
         readonly context: BrowserContext,
         readonly source: string,
-        readonly password: string = 'tester@1234',
+        readonly password: string = 'Tester@1234',
     ) {
         this.context = context;
         this.source = source;

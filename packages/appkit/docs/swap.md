@@ -1,3 +1,9 @@
+<!--
+This file is auto-generated. Do not edit manually.
+Changes will be overwritten when running the docs update script.
+Source template: template/packages/appkit/docs/swap.md
+-->
+
 # Swap
 
 AppKit supports swapping assets through the `SwapProvider` interface. The primary provider is `OmnistonSwapProvider`, which integrates with the [STON.fi](https://ston.fi) DEX aggregator via the [Omniston SDK](https://docs.ston.org/docs/developer-section/sdk/omniston-sdk).

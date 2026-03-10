@@ -1,3 +1,9 @@
+<!--
+This file is auto-generated. Do not edit manually.
+Changes will be overwritten when running the docs update script.
+Source template: template/packages/appkit-react/docs/hooks.md
+-->
+
 # Hooks
 
 AppKit React provides a set of hooks to interact with the blockchain and wallets.
