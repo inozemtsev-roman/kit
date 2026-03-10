@@ -13,8 +13,8 @@ import type {
     DeDustSwapProviderConfig,
     DeDustProviderOptions,
     DeDustQuoteResponse,
-    DeDustSwapResponse,
-} from './types';
+} from './models';
+import type { DeDustSwapResponse } from './DeDustPrivateTypes';
 import { SwapProvider } from '../SwapProvider';
 import type { SwapQuoteParams, SwapQuote, SwapParams } from '../../../api/models';
 import { SwapError } from '../errors';

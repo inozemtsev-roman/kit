@@ -9,7 +9,7 @@
 import { Address } from '@ton/core';
 
 import { Network } from '../../../api/models';
-import type { DeDustQuoteMetadata } from './types';
+import type { DeDustQuoteMetadata } from './models';
 import type { SwapToken } from '../../../api/models';
 
 /**

@@ -9,9 +9,12 @@
 export { DeDustSwapProvider } from './DeDustSwapProvider';
 export type {
     DeDustSwapProviderConfig,
-    DeDustQuoteMetadata,
     DeDustProviderOptions,
+    DeDustQuoteMetadata,
+    DeDustReferralOptions,
     DeDustQuoteResponse,
     DeDustRouteStep,
-} from './types';
+    DeDustSwapData,
+} from './models';
+export type { DeDustSwapResponse } from './DeDustPrivateTypes';
 export { isDeDustQuoteMetadata } from './utils';
