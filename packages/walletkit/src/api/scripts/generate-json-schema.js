@@ -1322,6 +1322,62 @@ function postProcessDiscriminatedUnions(schema) {
             Object.keys(typeDef).forEach((k) => delete typeDef[k]);
             Object.assign(typeDef, unionSchema);
             processDiscriminatorMemberTypes(topLevel.cases, topLevel.discriminatorField, definitions);
+
+            // Detect empty and single-field variants
+            const singleFieldCodingKeys = new Set();
+            for (const { rawValue, ref } of topLevel.cases) {
+                const memberName = typeNameFromRef(ref);
+                const memberDef = definitions[memberName];
+                if (!memberDef?.properties) continue;
+
+                const propKeys = Object.keys(memberDef.properties);
+                const caseName = toCamelCase(rawValue);
+                const propKey = `x_${caseName}`;
+                const caseProp = typeDef.properties[propKey];
+                if (!caseProp) continue;
+
+                if (propKeys.length === 0) {
+                    // Empty variant: no properties after discriminator removal
+                    caseProp['x-empty-variant'] = true;
+                } else if (propKeys.length === 1) {
+                    // Single-field variant: inline the field as associated value
+                    const fieldName = propKeys[0];
+                    const fieldSchema = memberDef.properties[fieldName];
+                    const isRequired = memberDef.required?.includes(fieldName) ?? false;
+
+                    // Preserve existing vendor extensions
+                    const vendorExts = {};
+                    for (const [k, v] of Object.entries(caseProp)) {
+                        if (k.startsWith('x-')) vendorExts[k] = v;
+                    }
+
+                    // Replace case property schema with the field's schema
+                    Object.keys(caseProp).forEach((k) => delete caseProp[k]);
+                    if (fieldSchema.$ref) {
+                        caseProp.allOf = [{ $ref: fieldSchema.$ref }];
+                    } else {
+                        Object.assign(caseProp, { ...fieldSchema });
+                    }
+
+                    // Restore + add vendor extensions
+                    Object.assign(caseProp, vendorExts);
+                    caseProp['x-single-field-variant'] = true;
+                    caseProp['x-single-field-name'] = fieldName;
+                    if (!isRequired) {
+                        caseProp['x-single-field-optional'] = true;
+                    }
+
+                    singleFieldCodingKeys.add(fieldName);
+
+                    // Mark member for suppression
+                    memberDef['x-skip-model'] = true;
+                }
+            }
+
+            // Add unique coding keys for single-field variants
+            if (singleFieldCodingKeys.size > 0) {
+                typeDef['x-single-field-coding-keys'] = [...singleFieldCodingKeys].map((k) => ({ name: k }));
+            }
             continue;
         }
 
@@ -1333,12 +1389,44 @@ function postProcessDiscriminatedUnions(schema) {
             const inlineUnion = detectDiscriminatedUnion(propDef);
             if (!inlineUnion) continue;
 
+            // Process member types first so we can detect empty variants
+            processDiscriminatorMemberTypes(inlineUnion.cases, inlineUnion.discriminatorField, definitions);
+
             // Build case data with type names for template rendering
-            const cases = inlineUnion.cases.map(({ rawValue, ref }) => ({
-                caseName: toCamelCase(rawValue),
-                rawValue,
-                typeName: typeNameFromRef(ref),
-            }));
+            const inlineSingleFieldCodingKeys = new Set();
+            const cases = inlineUnion.cases.map(({ rawValue, ref }) => {
+                const memberName = typeNameFromRef(ref);
+                const memberDef = definitions[memberName];
+                const propKeys = memberDef?.properties ? Object.keys(memberDef.properties) : [];
+
+                if (propKeys.length === 0) {
+                    return {
+                        caseName: toCamelCase(rawValue),
+                        rawValue,
+                        typeName: typeNameFromRef(ref),
+                        emptyVariant: true,
+                    };
+                } else if (propKeys.length === 1) {
+                    const fieldName = propKeys[0];
+                    const isRequired = memberDef.required?.includes(fieldName) ?? false;
+                    inlineSingleFieldCodingKeys.add(fieldName);
+                    memberDef['x-skip-model'] = true;
+                    return {
+                        caseName: toCamelCase(rawValue),
+                        rawValue,
+                        typeName: typeNameFromRef(ref),
+                        singleFieldVariant: true,
+                        singleFieldName: fieldName,
+                        ...(!isRequired && { singleFieldOptional: true }),
+                    };
+                } else {
+                    return {
+                        caseName: toCamelCase(rawValue),
+                        rawValue,
+                        typeName: typeNameFromRef(ref),
+                    };
+                }
+            });
 
             // Add inline union info to parent type for nested enum rendering
             if (!typeDef['x-inline-interface-unions']) {
@@ -1348,6 +1436,9 @@ function postProcessDiscriminatedUnions(schema) {
                 propertyName: propName,
                 discriminatorField: inlineUnion.discriminatorField,
                 cases,
+                ...(inlineSingleFieldCodingKeys.size > 0 && {
+                    singleFieldCodingKeys: [...inlineSingleFieldCodingKeys].map((k) => ({ name: k })),
+                }),
             });
 
             // Replace property with simple object type + marker
@@ -1355,8 +1446,6 @@ function postProcessDiscriminatedUnions(schema) {
             Object.keys(propDef).forEach((k) => delete propDef[k]);
             propDef.type = 'object';
             propDef['x-interface-union'] = true;
-
-            processDiscriminatorMemberTypes(inlineUnion.cases, inlineUnion.discriminatorField, definitions);
         }
     }
 }
@@ -1401,6 +1490,41 @@ function postProcessConstantFields(schema) {
                 value: constantValue,
                 type: 'String',
             });
+        }
+    }
+}
+
+/**
+ * Post-process schema to convert pure $ref definitions (type aliases) into
+ * x-type-alias markers so openapi-generator will create a file and the
+ * template can emit a Swift typealias.
+ */
+/**
+ * Post-process schema to strip `default` values from properties.
+ * @default JSDoc is documentation-only and should not produce default values in generated code.
+ */
+function postProcessStripDefaults(schema) {
+    const definitions = schema.definitions || {};
+    for (const typeDef of Object.values(definitions)) {
+        if (!typeDef.properties) continue;
+        for (const propDef of Object.values(typeDef.properties)) {
+            delete propDef.default;
+        }
+    }
+}
+
+function postProcessTypeAliases(schema) {
+    const definitions = schema.definitions || {};
+
+    for (const [, typeDef] of Object.entries(definitions)) {
+        if (typeDef.$ref && !typeDef.type && !typeDef.properties && !typeDef.allOf && !typeDef['x-enum-case-name']) {
+            const targetName = typeNameFromRef(typeDef.$ref);
+
+            Object.keys(typeDef).forEach((k) => delete typeDef[k]);
+            typeDef.type = 'object';
+            typeDef.properties = { _alias: { type: 'string' } };
+            typeDef['x-type-alias'] = true;
+            typeDef['x-alias-target'] = targetName;
         }
     }
 }
@@ -1456,6 +1580,12 @@ try {
 
     // Post-process: convert single-literal properties to constant fields
     postProcessConstantFields(schema);
+
+    // Post-process: strip @default values (documentation-only, not for codegen)
+    postProcessStripDefaults(schema);
+
+    // Post-process: convert pure $ref definitions (type aliases) to x-type-alias
+    postProcessTypeAliases(schema);
 
     fs.writeFileSync(outputPath, JSON.stringify(schema, null, 2));
 } catch (error) {

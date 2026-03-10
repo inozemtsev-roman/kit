@@ -1,3 +1,9 @@
+<!--
+This file is auto-generated. Do not edit manually.
+Changes will be overwritten when running the docs update script.
+Source template: template/packages/appkit/README.md
+-->
+
 # TonAppKit
 
 A dApp-side integration layer for TON Connect with a unified asset API for TON, Jettons, and NFTs

@@ -1,5 +1,12 @@
 # @ton/mcp
 
+## 0.1.14
+
+### Patch Changes
+
+- Updated dependencies [9c1a73d]
+    - @ton/walletkit@0.0.10
+
 ## 0.1.13
 
 ### Patch Changes
