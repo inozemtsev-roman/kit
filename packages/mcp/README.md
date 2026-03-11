@@ -99,7 +99,7 @@ HTTP mode keeps a separate MCP session/transport per client session id, so multi
 |-------------------|-----------|-------------------------------------------------------|
 | `NETWORK` | `mainnet` | TON network (`mainnet` / `testnet`) and default env override target for `TONCENTER_API_KEY` |
 | `MNEMONIC` |  | Space-separated 24-word mnemonic phrase for single-wallet mode |
-| `PRIVATE_KEY` |  | Hex-encoded private key: 32-byte seed or 64-byte `private||public` (alternative to mnemonic) |
+| `PRIVATE_KEY` |  | Hex-encoded private key: 32-byte seed or 64-byte `private+public` (alternative to mnemonic) |
 | `WALLET_VERSION` | `v5r1` | Wallet version to use in single-wallet mode (`v5r1`, `v4r2`, or `agentic`) |
 | `AGENTIC_WALLET_ADDRESS` |  | Agentic wallet address (required for `WALLET_VERSION=agentic`, unless derived from init params) |
 | `AGENTIC_WALLET_NFT_INDEX` |  | Agentic wallet NFT index / subwallet id (`uint256`, optional) |
