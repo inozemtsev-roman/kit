@@ -43,7 +43,8 @@ export function uiTestFixture(config: UITestConfig = {}, slowMo = 0) {
 
     return test.extend<UITestFixture>({
         webOnly: [
-            async (_fixtures, use) => {
+            // eslint-disable-next-line no-empty-pattern
+            async ({}, use) => {
                 test.skip(isExtension, 'web-only: not supported in extension mode');
                 await use();
             },
