@@ -309,7 +309,7 @@ export async function createTonWalletMCP(config: TonMcpFactoryConfig): Promise<M
     registerTool('get_current_wallet', walletManagementTools.get_current_wallet);
     registerTool('set_active_wallet', walletManagementTools.set_active_wallet);
     registerTool('remove_wallet', walletManagementTools.remove_wallet);
-    registerTool('get_network_config', walletManagementTools.get_network_config);
+    // registerTool('get_network_config', walletManagementTools.get_network_config);
     registerTool('agentic_validate_wallet', walletManagementTools.validate_agentic_wallet);
     registerTool('agentic_list_wallets_by_owner', walletManagementTools.list_agentic_wallets_by_owner);
     registerTool('agentic_import_wallet', walletManagementTools.import_agentic_wallet);

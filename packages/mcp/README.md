@@ -293,12 +293,6 @@ Reverse-resolve a TON wallet address to its associated DNS domain when available
 #### `get_known_jettons`
 Get a list of known/popular Jettons on TON with their addresses and metadata. Useful for looking up token addresses for swaps or transfers.
 
-#### `get_network_config` (registry mode only)
-Get Toncenter and agentic collection settings for a network.
-
-**Parameters:**
-- `network` (required): `mainnet` or `testnet`
-
 #### `agentic_validate_wallet` (registry mode only)
 Validate an existing agentic wallet address against the expected network and collection.
 

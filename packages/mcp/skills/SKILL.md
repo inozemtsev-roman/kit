@@ -33,7 +33,6 @@ Use this skill when the user wants to:
 - `get_current_wallet` - Get the active wallet from the local registry
 - `set_active_wallet` - Switch active wallet by id, name, or address
 - `remove_wallet` - Soft-delete a stored wallet from the registry
-- `get_network_config` - Read Toncenter/API and agentic collection settings for a network
 
 ### Agentic Wallet Management
 - `agentic_validate_wallet` - Validate an agentic wallet against network/collection and optional owner

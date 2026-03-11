@@ -49,9 +49,9 @@ function errorResponse(error: unknown): ToolResponse {
     };
 }
 
-const getNetworkConfigSchema = z.object({
-    network: z.enum(['mainnet', 'testnet']).describe('Network to inspect'),
-});
+// const getNetworkConfigSchema = z.object({
+//     network: z.enum(['mainnet', 'testnet']).describe('Network to inspect'),
+// });
 
 const setNetworkConfigSchema = z.object({
     network: z.enum(['mainnet', 'testnet']).describe('Network to update'),
@@ -156,21 +156,21 @@ export function createMcpWalletManagementTools(registry: WalletRegistryService) 
             },
         },
 
-        get_network_config: {
-            description: 'Get Toncenter and agentic collection settings for a network.',
-            inputSchema: getNetworkConfigSchema,
-            handler: async (args: z.infer<typeof getNetworkConfigSchema>): Promise<ToolResponse> => {
-                try {
-                    const config = await registry.getNetworkConfig(args.network);
-                    return successResponse({
-                        network: args.network,
-                        config: sanitizeNetworkConfig(config),
-                    });
-                } catch (error) {
-                    return errorResponse(error);
-                }
-            },
-        },
+        // get_network_config: {
+        //     description: 'Get Toncenter and agentic collection settings for a network.',
+        //     inputSchema: getNetworkConfigSchema,
+        //     handler: async (args: z.infer<typeof getNetworkConfigSchema>): Promise<ToolResponse> => {
+        //         try {
+        //             const config = await registry.getNetworkConfig(args.network);
+        //             return successResponse({
+        //                 network: args.network,
+        //                 config: sanitizeNetworkConfig(config),
+        //             });
+        //         } catch (error) {
+        //             return errorResponse(error);
+        //         }
+        //     },
+        // },
 
         set_network_config: {
             description: 'Update Toncenter or agentic collection settings for a network.',

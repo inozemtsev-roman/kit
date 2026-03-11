@@ -86,12 +86,6 @@ Returns: Transaction status (pending, completed, failed) and trace details
 Get list of known/popular Jettons on TON.
 Returns: array with symbol, name, address, decimals
 
-### get_network_config
-Registry mode only. Read Toncenter/API and agentic collection settings for a network.
-Parameters:
-- network (required): mainnet or testnet
-Returns: sanitized network config
-
 ### send_ton
 Send TON to an address.
 Parameters:
