@@ -72,6 +72,10 @@ const AGENTIC_CALLBACK_BASE_URL = process.env.AGENTIC_CALLBACK_BASE_URL?.trim();
 const AGENTIC_CALLBACK_HOST = process.env.AGENTIC_CALLBACK_HOST?.trim() || '127.0.0.1';
 const AGENTIC_CALLBACK_PORT = Number.parseInt(process.env.AGENTIC_CALLBACK_PORT ?? '', 10);
 
+if (WALLET_VERSION !== 'agentic' && WALLET_VERSION !== 'v4r2' && WALLET_VERSION !== 'v5r1') {
+    throw new Error(`Invalid WALLET_VERSION: "${WALLET_VERSION}". Must be one of: agentic, v4r2, v5r1`);
+}
+
 function log(message: string) {
     // eslint-disable-next-line no-console
     console.error(`[${SERVER_NAME}] ${message}`);
@@ -95,7 +99,7 @@ function parseArgs() {
     return { mode: 'http' as const, port, host };
 }
 
-function parseOptionalBigInt(input?: string): bigint | undefined {
+function parseAgenticWalletNftIndex(input?: string): bigint | undefined {
     if (!input) {
         return undefined;
     }
@@ -164,7 +168,7 @@ async function createWalletFromSigner(kit: TonWalletKit, network: Network, signe
                     client: kit.getApiClient(network),
                     network,
                     walletAddress: AGENTIC_WALLET_ADDRESS,
-                    walletNftIndex: parseOptionalBigInt(AGENTIC_WALLET_NFT_INDEX),
+                    walletNftIndex: parseAgenticWalletNftIndex(AGENTIC_WALLET_NFT_INDEX),
                     collectionAddress: AGENTIC_COLLECTION_ADDRESS,
                 });
 
