@@ -6,58 +6,68 @@ A Model Context Protocol (MCP) server for TON blockchain wallet operations. Buil
 
 - **Balance Queries**: Check TON and Jetton balances, view transaction history
 - **Transfers**: Send TON, Jettons, and NFTs to any address
-- **Agentic Sub-wallet Deploy**: Deploy additional Agentic wallets from a root Agentic wallet
 - **Swaps**: Get quotes for token swaps via DEX aggregators
 - **NFTs**: List, inspect, and transfer NFTs
 - **DNS**: Resolve TON DNS-compatible domains and reverse-lookup addresses
 - **Known Jettons**: Built-in directory of popular tokens
-- **Wallet Registry Mode**: Work with multiple stored wallets, active wallet selection, and local config-backed management tools
-- **Agentic Onboarding**: Start and complete first root-agent wallet setup from MCP
+- **Agentic Wallets**: Manage agentic wallets. Create, import, or manage your agentic wallets and sub-wallets.
 - **Multiple Transports**: Stdio (default), multi-session HTTP server, and serverless modes
 
 ## Quick Start
 
 `@ton/mcp` supports two runtime modes.
 
-- **Registry mode**: if `MNEMONIC` and `PRIVATE_KEY` are not set, the server starts from local config registry at `~/.config/ton/config.json` or `TON_CONFIG_PATH`
+- **Agentic Wallets mode**: Server starts from local config registry at `~/.config/ton/config.json` or `TON_CONFIG_PATH`
 - **Single-wallet mode**: if `MNEMONIC` or `PRIVATE_KEY` is set, the server starts with one in-memory wallet
 
+### Agentic Wallets mode
+
+Self-custody wallets for autonomous agents. Your AI agent gets TON wallet capabilities — transfers, swaps, NFTs. User keeps the master key, agent keeps the operator key.
+
+**Learn more about [Agentic Wallets](https://agentic-wallets-dashboard.vercel.app/).**
+
+Agentic Wallets mode is the default mode. It allows you to manage agentic wallets and agentic sub-wallets. To create your first agentic wallet, ask your agent to `create agentic wallet` and follow the instructions.
+
 ```bash
-# Run as stdio MCP server in registry mode
-npx @ton/mcp
+# Run as stdio MCP server in agentic mode
+npx @ton/mcp@alpha
+
+# Run as HTTP server in agentic mode
+npx @ton/mcp@alpha --http
 
 # Run in registry mode with a custom config path
-TON_CONFIG_PATH=/path/to/config.json npx @ton/mcp
+TON_CONFIG_PATH=/path/to/config.json npx @ton/mcp@alpha
+```
 
+### Single-wallet mode
+
+Single-wallet mode is a mode where the server starts with one in-memory wallet. This mode is useful when you want to manage a single wallet or when you want to use the server for a one-off task.
+
+```bash
 # Run as stdio MCP server with mnemonic
-MNEMONIC="word1 word2 ..." npx @ton/mcp
+MNEMONIC="word1 word2 ..." npx @ton/mcp@alpha
 
 # Run as HTTP server (port 3000)
-npx @ton/mcp --http
+MNEMONIC="word1 word2 ..." npx @ton/mcp@alpha --http
 
-# Run as HTTP server on custom port
-npx @ton/mcp --http 8080
-
-# Run with custom agentic wallet contract
-PRIVATE_KEY="0xyour_private_key" \
-WALLET_VERSION="agentic" \
-AGENTIC_WALLET_ADDRESS="EQ..." \
-npx @ton/mcp
+# Run as HTTP server on custom port and private key
+PRIVATE_KEY="0xyour_private_key" npx @ton/mcp@alpha --http 8080
 ```
 
 ## Usage with MCP Clients
 
 ### Claude Desktop / Cursor
 
-Registry mode:
+Agentic Wallets mode:
 
 ```json
 {
   "mcpServers": {
     "ton": {
       "command": "npx",
-      "args": ["-y", "@ton/mcp"],
+      "args": ["-y", "@ton/mcp@alpha"],
       "env": {
+        "// optional config path": "",
         "TON_CONFIG_PATH": "/absolute/path/to/config.json"
       }
     }
@@ -72,7 +82,7 @@ Single-wallet mode:
   "mcpServers": {
     "ton": {
       "command": "npx",
-      "args": ["-y", "@ton/mcp"],
+      "args": ["-y", "@ton/mcp@alpha"],
       "env": {
         "MNEMONIC": "word1 word2 word3 ...",
         "PRIVATE_KEY": "0xyour_private_key_here (optional, alternative to MNEMONIC)"
@@ -87,7 +97,7 @@ Single-wallet mode:
 Start the server and point your MCP client to the endpoint:
 
 ```bash
-npx @ton/mcp --http 3000
+npx @ton/mcp@alpha --http 3000
 # MCP endpoint: http://localhost:3000/mcp
 ```
 
