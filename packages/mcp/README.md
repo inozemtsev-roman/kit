@@ -29,6 +29,9 @@ Self-custody wallets for autonomous agents. Your AI agent gets TON wallet capabi
 Agentic Wallets mode is the default mode that allows you to manage agentic wallets. To create your first agentic wallet, ask your agent to `create agentic wallet` and follow the instructions.
 
 ```bash
+# Install skills (recommended)
+npx skills add ton-connect/kit/packages/mcp
+
 # Run as stdio MCP server in agentic mode
 npx @ton/mcp@alpha
 

@@ -13,13 +13,13 @@
  * TON wallet management tools for use with Claude Desktop or other MCP clients.
  *
  * Usage:
- *   npx @ton/mcp                          # stdio mode (default)
- *   npx @ton/mcp --http                   # HTTP server on 0.0.0.0:3000
- *   npx @ton/mcp --http 8080              # HTTP server on custom port
- *   npx @ton/mcp --http --host 127.0.0.1  # HTTP server on custom host
- *   npx @ton/mcp get_balance              # raw CLI: call tool and exit
- *   npx @ton/mcp get_transactions --limit 5
- *   npx @ton/mcp get_jetton_balance --jettonAddress EQAbc...
+ *   npx @ton/mcp@alpha                          # stdio mode (default)
+ *   npx @ton/mcp@alpha --http                   # HTTP server on 0.0.0.0:3000
+ *   npx @ton/mcp@alpha --http 8080              # HTTP server on custom port
+ *   npx @ton/mcp@alpha --http --host 127.0.0.1  # HTTP server on custom host
+ *   npx @ton/mcp@alpha get_balance              # raw CLI: call tool and exit
+ *   npx @ton/mcp@alpha get_transactions --limit 5
+ *   npx @ton/mcp@alpha get_jetton_balance --jettonAddress EQAbc...
  *
  * Environment variables:
  *   NETWORK         - Network to use (mainnet or testnet, default: mainnet)

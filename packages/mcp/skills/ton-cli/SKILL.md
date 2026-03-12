@@ -1,9 +1,9 @@
 ---
 name: ton-cli
-description: Call TON MCP tools directly from the command line. Use when you want to query wallet info, check balances, send transactions, or run any TON wallet tool without starting an MCP server session. Works via `npx @ton/mcp <tool_name> [--arg value ...]`.
+description: Call TON MCP tools directly from the command line. Use when you want to query wallet info, check balances, send transactions, or run any TON wallet tool without starting an MCP server session. Works via `npx @ton/mcp@alpha <tool_name> [--arg value ...]`.
 user-invocable: true
 disable-model-invocation: false
-allowed-tools: ["Bash(npx @ton/mcp *)"]
+allowed-tools: ["Bash(npx @ton/mcp@alpha *)"]
 ---
 
 # TON MCP Raw CLI Mode
@@ -15,22 +15,22 @@ Run any TON wallet MCP tool directly from the command line. The binary invokes t
 | Command | Description |
 | ------- | ----------- |
 | `npx @ton/mcp` | stdio MCP server (for Claude Desktop / MCP clients) |
-| `npx @ton/mcp --http [port]` | HTTP MCP server |
-| `npx @ton/mcp <tool_name> [--arg value ...]` | **Raw CLI: call one tool and exit** |
+| `npx @ton/mcp@alpha --http [port]` | HTTP MCP server |
+| `npx @ton/mcp@alpha <tool_name> [--arg value ...]` | **Raw CLI: call one tool and exit** |
 
 ## Raw CLI Usage
 
 ```bash
 # No arguments
-npx @ton/mcp get_balance
+npx @ton/mcp@alpha get_balance
 
 # Named arguments (--key value)
-npx @ton/mcp get_transactions --limit 5
-npx @ton/mcp get_jetton_balance --jettonAddress EQAbc...
+npx @ton/mcp@alpha get_transactions --limit 5
+npx @ton/mcp@alpha get_jetton_balance --jettonAddress EQAbc...
 
 # All values are passed as plain strings; JSON objects/arrays are also accepted
-npx @ton/mcp get_transactions --limit 10
-npx @ton/mcp send_ton --toAddress UQA... --amount 0.1 --comment "hi"
+npx @ton/mcp@alpha get_transactions --limit 10
+npx @ton/mcp@alpha send_ton --toAddress UQA... --amount 0.1 --comment "hi"
 ```
 
 Arguments are passed as `--key value` pairs. Objects/arrays (`{...}` / `[...]`) are JSON-parsed; everything else is kept as a plain string.
@@ -41,7 +41,7 @@ All tools print JSON to **stdout**. Errors are printed to **stderr** and the pro
 
 ```bash
 # Capture output for scripting
-BALANCE=$(npx @ton/mcp get_balance)
+BALANCE=$(npx @ton/mcp@alpha get_balance)
 echo $BALANCE | jq '.balance'
 ```
 
@@ -120,34 +120,34 @@ Without `MNEMONIC` or `PRIVATE_KEY`, the CLI uses the local config registry at `
 
 ```bash
 # Check wallet address and network
-npx @ton/mcp get_wallet
+npx @ton/mcp@alpha get_wallet
 
 # Check TON balance
-npx @ton/mcp get_balance
+npx @ton/mcp@alpha get_balance
 
 # List all tokens
-npx @ton/mcp get_jettons
+npx @ton/mcp@alpha get_jettons
 
 # Last 10 transactions
-npx @ton/mcp get_transactions --limit 10
+npx @ton/mcp@alpha get_transactions --limit 10
 
 # Get balance of a specific jetton
-npx @ton/mcp get_jetton_balance --address EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs
+npx @ton/mcp@alpha get_jetton_balance --address EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs
 
 # Resolve a .ton domain
-npx @ton/mcp resolve_dns --domain foundation.ton
+npx @ton/mcp@alpha resolve_dns --domain foundation.ton
 
 # In registry mode: check balances for a named wallet
-npx @ton/mcp get_balance --walletSelector "my-hot-wallet"
+npx @ton/mcp@alpha get_balance --walletSelector "my-hot-wallet"
 
 # In registry mode: list all registered wallets
-npx @ton/mcp list_wallets
+npx @ton/mcp@alpha list_wallets
 
 # Send TON (always confirm with user first)
-npx @ton/mcp send_ton --toAddress UQA... --amount 0.5 --comment "payment"
+npx @ton/mcp@alpha send_ton --toAddress UQA... --amount 0.5 --comment "payment"
 
 # Swap quote
-npx @ton/mcp get_swap_quote --fromToken TON --toToken EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs --amount 1
+npx @ton/mcp@alpha get_swap_quote --fromToken TON --toToken EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs --amount 1
 ```
 
 ## Notes
