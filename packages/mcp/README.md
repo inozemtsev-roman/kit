@@ -4,14 +4,14 @@ A Model Context Protocol (MCP) server for TON blockchain wallet operations. Buil
 
 ## Features
 
-- **Balance Queries**: Check TON and Jetton balances, view transaction history
-- **Transfers**: Send TON, Jettons, and NFTs to any address
-- **Swaps**: Get quotes for token swaps via DEX aggregators
-- **NFTs**: List, inspect, and transfer NFTs
-- **DNS**: Resolve TON DNS-compatible domains and reverse-lookup addresses
-- **Known Jettons**: Built-in directory of popular tokens
-- **Agentic Wallets**: Manage agentic wallets. Create, import, or manage your agentic wallets and sub-wallets.
-- **Multiple Transports**: Stdio (default), multi-session HTTP server, and serverless modes
+- **Balance Queries**: Check TON and Jetton balances, view transaction history.
+- **Transfers**: Send TON, Jettons, and NFTs to any address.
+- **Swaps**: Get quotes for token swaps via DEX aggregators.
+- **NFTs**: List, inspect, and transfer NFTs.
+- **DNS**: Resolve TON DNS-compatible domains and reverse-lookup addresses.
+- **Known Jettons**: Built-in directory of popular tokens.
+- **Agentic Wallets**: Manage agentic wallets. Create, import, or manage your agentic wallets.
+- **Multiple Transports**: Stdio (default), multi-session HTTP server, and serverless modes.
 
 ## Quick Start
 
@@ -26,9 +26,12 @@ Self-custody wallets for autonomous agents. Your AI agent gets TON wallet capabi
 
 **Learn more about [Agentic Wallets](https://agentic-wallets-dashboard.vercel.app/).**
 
-Agentic Wallets mode is the default mode. It allows you to manage agentic wallets and agentic sub-wallets. To create your first agentic wallet, ask your agent to `create agentic wallet` and follow the instructions.
+Agentic Wallets mode is the default mode that allows you to manage agentic wallets. To create your first agentic wallet, ask your agent to `create agentic wallet` and follow the instructions.
 
 ```bash
+# Install skills (recommended)
+npx skills add ton-connect/kit/packages/mcp
+
 # Run as stdio MCP server in agentic mode
 npx @ton/mcp@alpha
 
@@ -112,7 +115,7 @@ HTTP mode keeps a separate MCP session/transport per client session id, so multi
 | `PRIVATE_KEY` |  | Hex-encoded private key: 32-byte or 64-byte (alternative to mnemonic) |
 | `WALLET_VERSION` | `v5r1` | Wallet version to use in single-wallet mode (`v5r1`, `v4r2`, or `agentic`) |
 | `AGENTIC_WALLET_ADDRESS` |  | Agentic wallet address (required for `WALLET_VERSION=agentic`, unless derived from init params) |
-| `AGENTIC_WALLET_NFT_INDEX` |  | Agentic wallet NFT index / subwallet id (`uint256`, optional) |
+| `AGENTIC_WALLET_NFT_INDEX` |  | Agentic wallet NFT index (`uint256`, optional) |
 | `AGENTIC_COLLECTION_ADDRESS` | `EQByQ19qvWxW7VibSbGEgZiYMqilHY5y1a_eeSL2VaXhfy07` | Agentic collection address override for single-wallet mode |
 | `TONCENTER_API_KEY` |  | API key for Toncenter (optional, for higher rate limits) |
 | `TON_CONFIG_PATH` | `~/.config/ton/config.json` | Config path for registry mode |
@@ -231,16 +234,6 @@ Send a raw transaction with full control over messages. Supports multiple messag
   - `payload` (optional): Message payload data (Base64)
 - `validUntil` (optional): Unix timestamp after which the transaction becomes invalid
 - `fromAddress` (optional): Sender wallet address
-
-#### `agentic_deploy_subwallet`
-Deploy a new Agentic sub-wallet from the current wallet. Works only with an agentic root wallet that can sign and only when the current wallet is a user-root wallet (`deployedByUser=true`). Returns `normalizedHash`, deployed sub-wallet address, and computed sub-wallet NFT index. NFT metadata is written in onchain TEP-64 format.
-
-**Default flow:** Poll `get_transaction_status` with the returned `normalizedHash` until completion.
-
-**Parameters:**
-- `operatorPublicKey` (required): New sub-wallet operator public key (`uint256`, decimal or `0x`-prefixed hex)
-- `metadata` (required): Onchain TEP-64 metadata object. Must include at least `name` (non-empty string).
-- `amountTon` (optional): TON amount to attach for deployment in TON units (default: `"0.05"`)
 
 ### Swaps
 

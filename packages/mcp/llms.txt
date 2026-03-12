@@ -111,14 +111,6 @@ Parameters:
 - fromAddress (optional): sender address
 Returns: top-level normalizedHash plus details
 
-### agentic_deploy_subwallet
-Deploy a new Agentic sub-wallet from a user-root Agentic wallet.
-Parameters:
-- operatorPublicKey (required): new sub-wallet operator public key (`uint256`, decimal or `0x`-hex)
-- metadata (required): onchain NFT metadata in TEP-64 format with mandatory `name`
-- amountTon (optional): attached TON amount, default `"0.05"`
-Returns: normalizedHash, deployed sub-wallet address, sub-wallet NFT index
-
 ### get_swap_quote
 Get quote for token swap.
 Parameters:
@@ -184,6 +176,26 @@ Parameters:
 - network (optional): mainnet or testnet
 - name (optional): wallet display name
 
+### agentic_rotate_operator_key
+Registry mode only. Start agentic operator key rotation, persist a pending draft, and return a dashboard URL for the on-chain change.
+Parameters:
+- walletSelector (optional): wallet id, name, or address. Uses the active wallet when omitted
+
+### agentic_get_pending_operator_key_rotation
+Registry mode only. Read one pending operator key rotation.
+Parameters:
+- rotationId (required): pending rotation identifier
+
+### agentic_complete_rotate_operator_key
+Registry mode only. Complete an agentic operator key rotation after the dashboard transaction lands on chain, then update the stored operator key locally.
+Parameters:
+- rotationId (required): pending rotation identifier
+
+### agentic_cancel_rotate_operator_key
+Registry mode only. Cancel a pending operator key rotation and discard its stored replacement key.
+Parameters:
+- rotationId (required): pending rotation identifier
+
 ### agentic_start_root_wallet_setup
 Registry mode only. Start first root-agent setup, generate operator keys, persist a pending draft, and return a dashboard URL.
 Parameters:
@@ -243,6 +255,12 @@ Parameters:
 2. agentic_import_wallet to import it into the local registry
 3. If the wallet needs write access and no pending draft was recovered, use agentic_rotate_operator_key and then agentic_complete_rotate_operator_key
 4. Only then use write tools for that wallet
+
+### Rotating an Agentic Operator Key
+1. agentic_rotate_operator_key to create a pending rotation and get the dashboard URL
+2. Optionally inspect progress with agentic_get_pending_operator_key_rotation or agentic_list_pending_operator_key_rotations
+3. agentic_complete_rotate_operator_key after the on-chain change is confirmed
+4. agentic_cancel_rotate_operator_key if the pending rotation should be discarded
 
 ### Setting Up the First Agentic Root Wallet
 1. agentic_start_root_wallet_setup
