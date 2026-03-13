@@ -27,6 +27,7 @@ import type {
     StakingProviderInfo,
     StakeParams,
     UnstakeParams,
+    UnstakeMode,
 } from '@ton/walletkit';
 
 import type {
@@ -232,6 +233,7 @@ export interface StakingState {
     isStaking: boolean;
     isUnstaking: boolean;
     error: string | null;
+    unstakeMode: UnstakeMode;
     stakedBalance: StakingBalance | null;
     providerInfo: StakingProviderInfo | null;
 }
@@ -241,6 +243,7 @@ export interface StakingSlice {
 
     setStakingAmount: (amount: string) => void;
     setStakingProviderId: (providerId: string) => void;
+    setUnstakeMode: (mode: UnstakeMode) => void;
     getStakingQuote: (params: Omit<StakingQuoteParams, 'network'>) => Promise<void>;
     stake: (params: Omit<StakeParams, 'userAddress'>) => Promise<void>;
     unstake: (params: Omit<UnstakeParams, 'userAddress'>) => Promise<void>;
