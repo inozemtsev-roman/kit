@@ -1,5 +1,11 @@
 # @ton/mcp
 
+## 0.1.15-alpha.5
+
+### Patch Changes
+
+- Updated skills to improve user flow with prompts and urls
+
 ## 0.1.15-alpha.4
 
 ### Patch Changes
