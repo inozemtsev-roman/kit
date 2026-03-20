@@ -212,8 +212,11 @@ npx @ton/mcp@alpha get_transaction_status --normalizedHash <NORMALIZED_HASH>
 
 ```bash
 npx @ton/mcp@alpha get_known_jettons
+# quote
 npx @ton/mcp@alpha get_swap_quote --fromToken TON --toToken EQ... --amount 2 --slippageBps 100
-npx @ton/mcp@alpha send_raw_transaction --messages '[{"address":"<ROUTER_ADDRESS>","amount":"<AMOUNT_NANOTON>","payload":"<BASE64_PAYLOAD>"}]' --validUntil <UNIX_TIMESTAMP>
+# pass messages from quote if user approved
+npx @ton/mcp@alpha send_raw_transaction --messages '<quote.transaction.messages>'
+# If the quote includes transaction.validUntil, add --validUntil to the send_raw_transaction invocation above
 npx @ton/mcp@alpha get_transaction_status --normalizedHash <NORMALIZED_HASH>
 ```
 
