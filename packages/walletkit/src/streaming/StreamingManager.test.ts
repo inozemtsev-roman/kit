@@ -11,8 +11,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { StreamingManager } from './StreamingManager';
 import type { StreamingProvider, StreamingProviderFactory } from '../api/interfaces';
-import type { Network, StreamingWatchType } from '../api/models';
+import type { Network, StreamingWatchType, BalanceUpdate } from '../api/models';
 import type { WalletKitEventEmitter } from '../types/emitter';
+import type { KitEvent } from '../core/EventEmitter';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -148,6 +149,56 @@ describe('StreamingManager subscriptions', () => {
         });
     });
 
+    describe('multiple subscribers for same resource', () => {
+        it('notifies all subscribers and handles partial unwatch', () => {
+            const { manager, emitter } = makeManager(network, provider);
+            const cb1 = vi.fn();
+            const cb2 = vi.fn();
+
+            const unwatch1 = manager.watchBalance(network, ADDR_A, cb1);
+            manager.watchBalance(network, ADDR_A, cb2);
+
+            // Simulate update
+            const update: BalanceUpdate = {
+                address: ADDR_A,
+                balance: '100',
+                type: 'balance',
+            };
+            // The emitter.on mock returns a function, but we need to trigger the actual callback.
+            expect(emitter.on).toHaveBeenCalledTimes(2);
+
+            const calls = vi.mocked(emitter.on).mock.calls;
+            const handler1 = calls[0][1] as (event: KitEvent<BalanceUpdate>) => void;
+            const handler2 = calls[1][1] as (event: KitEvent<BalanceUpdate>) => void;
+
+            const event: KitEvent<BalanceUpdate> = {
+                payload: update,
+                type: 'balanceUpdate',
+                timestamp: Date.now(),
+            };
+
+            handler1(event);
+            handler2(event);
+
+            expect(cb1).toHaveBeenCalledWith(update);
+            expect(cb2).toHaveBeenCalledWith(update);
+
+            // Unwatch first
+            unwatch1();
+            expect(provider.unwatchBalance).not.toHaveBeenCalled();
+
+            cb1.mockClear();
+            cb2.mockClear();
+
+            handler1(event); // This one should be "off" in real life, but we called unwatch1() which calls off()
+            handler2(event);
+
+            // Since we mocked 'off' (returned by on), we should check if off was called.
+            const off1 = vi.mocked(emitter.on).mock.results[0].value;
+            expect(off1).toHaveBeenCalled();
+        });
+    });
+
     describe('getWatchers (via getWatchers callback)', () => {
         it('returns correct types and addresses after multiple watches', () => {
             const emitter = makeMockEventEmitter();
@@ -215,6 +266,26 @@ describe('StreamingManager subscriptions', () => {
             manager.watchBalance(network, ADDR_A, vi.fn());
             manager.shutdown();
             expect(provider.close).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe('multiple networks', () => {
+        it('uses separate providers for different chainIds', () => {
+            const network1 = makeMockNetwork(1);
+            const network2 = makeMockNetwork(2);
+            const provider1 = makeMockProvider();
+            const provider2 = makeMockProvider();
+            const emitter = makeMockEventEmitter();
+            const manager = new StreamingManager(emitter);
+
+            manager.registerProviderFactory(network1, () => provider1);
+            manager.registerProviderFactory(network2, () => provider2);
+
+            manager.watchBalance(network1, ADDR_A, vi.fn());
+            manager.watchBalance(network2, ADDR_A, vi.fn());
+
+            expect(provider1.watchBalance).toHaveBeenCalledTimes(1);
+            expect(provider2.watchBalance).toHaveBeenCalledTimes(1);
         });
     });
 });

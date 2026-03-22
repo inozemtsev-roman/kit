@@ -7,9 +7,13 @@
  */
 
 import { globalLogger } from '../core/Logger';
-import type { StreamingProvider, StreamingProviderListener, StreamingProviderContext } from '../api/interfaces';
-import type { StreamingWatchType } from '../api/models';
-import { asAddressFriendly } from '../utils';
+import type {
+    StreamingProvider,
+    StreamingProviderListener,
+    StreamingProviderContext,
+} from '../api/interfaces/StreamingProvider';
+import type { StreamingWatchType } from '../api/models/streaming/StreamingWatchType';
+import { asAddressFriendly } from '../utils/address';
 
 const log = globalLogger.createChild('WebsocketStreamingProvider');
 

@@ -167,6 +167,56 @@ describe('TonCenterStreamingProvider', () => {
         expect(ws.close).toHaveBeenCalled();
     });
 
+    it('handles rapid watch/unwatch for the same address gracefully via debouncing', async () => {
+        const context = {
+            network: Network.testnet(),
+            listener,
+            getWatchers: () => watchers,
+        };
+        const provider = new TonCenterStreamingProvider(context);
+
+        // Simulate 1st watch
+        watchers.set('balance', new Set([ADDR_A]));
+        provider.watchBalance(ADDR_A);
+
+        // Simulate 2nd watch immediately
+        provider.watchBalance(ADDR_A);
+
+        // Advance only connection time (10ms for onopen)
+        vi.advanceTimersByTime(20);
+        // Initial sync happens on onopen
+        expect(MockWebSocket.lastInstance?.send).toHaveBeenCalledTimes(1);
+
+        // Simulate 2nd watch immediately (should trigger debounce)
+        provider.watchBalance(ADDR_A);
+
+        // Advance debounce time (50ms)
+        vi.advanceTimersByTime(100);
+
+        const sentMessages = MockWebSocket.lastInstance?.send.mock.calls.map((call) => JSON.parse(call[0]));
+        const subscribeMsgs = sentMessages?.filter((m) => m.operation === 'subscribe');
+
+        // Should be 2 subscribe messages: one from onopen, one from debounced requestSync
+        expect(subscribeMsgs!.length).toBe(2);
+        expect(subscribeMsgs![1].addresses).toContain(ADDR_A);
+
+        // Now unwatch once (simulating one of two subscribers dropping)
+        provider.unwatchBalance(ADDR_A);
+        vi.advanceTimersByTime(100);
+
+        // Since getWatchers still has ADDR_A (simulating ref count > 0 at Manager level)
+        const lastMsg = JSON.parse(MockWebSocket.lastInstance?.send.mock.calls.pop()![0]);
+        expect(lastMsg.operation).toBe('subscribe');
+        expect(lastMsg.addresses).toContain(ADDR_A);
+
+        // Finally unwatch last one
+        watchers.delete('balance');
+        provider.unwatchBalance(ADDR_A);
+        vi.advanceTimersByTime(100);
+
+        expect(MockWebSocket.lastInstance?.close).toHaveBeenCalled();
+    });
+
     it('handles incoming account state notifications', async () => {
         const context = {
             network: Network.testnet(),

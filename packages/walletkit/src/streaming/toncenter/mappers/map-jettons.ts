@@ -19,7 +19,7 @@ export function mapJettons(notification: StreamingV2JettonsNotification): Jetton
     const decimals = typeof decimalsStr === 'string' ? parseInt(decimalsStr, 10) : undefined;
 
     let formattedBalance: string | undefined;
-    if (decimals !== undefined && balance) {
+    if (decimals !== undefined && !isNaN(decimals) && balance) {
         formattedBalance = formatUnits(balance, decimals);
     }
 
