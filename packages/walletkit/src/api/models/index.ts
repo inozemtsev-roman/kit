@@ -107,3 +107,4 @@ export type { BalanceUpdate } from './streaming/BalanceUpdate';
 export type { TransactionsUpdate } from './streaming/TransactionsUpdate';
 export type { JettonUpdate } from './streaming/JettonUpdate';
 export type { StreamingUpdate } from './streaming/StreamingUpdate';
+export type { StreamingEvents } from './streaming/StreamingEvents';

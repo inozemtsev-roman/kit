@@ -11,7 +11,7 @@
 import type { CONNECT_EVENT_ERROR_CODES, SendTransactionRpcResponseError } from '@tonconnect/protocol';
 
 import type { JettonsAPI } from './jettons';
-import type { StreamingManager } from '../streaming/StreamingManager';
+import type { StreamingAPI } from '../api/interfaces';
 import type { ApiClient } from './toncenter/ApiClient';
 import type { Wallet, WalletAdapter } from '../api/interfaces';
 import type { Network } from '../api/models/core/Network';
@@ -160,5 +160,5 @@ export interface ITonWalletKit {
     // === Streaming API ===
 
     /** Get streaming manager */
-    streaming: StreamingManager;
+    streaming: StreamingAPI;
 }

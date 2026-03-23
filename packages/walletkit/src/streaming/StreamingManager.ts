@@ -7,7 +7,6 @@
  */
 
 import type { Network } from '../api/models';
-import type { WalletKitEventEmitter } from '../types/emitter';
 import type { StreamingProvider, StreamingProviderFactory, StreamingAPI } from '../api/interfaces';
 import type {
     JettonUpdate,
@@ -15,30 +14,28 @@ import type {
     TransactionsUpdate,
     StreamingUpdate,
     StreamingWatchType,
+    StreamingEvents,
 } from '../api/models';
 import { globalLogger } from '../core/Logger';
 import { asAddressFriendly, compareAddress } from '../utils';
+import type { EventEmitter } from '../core/EventEmitter';
 
 const log = globalLogger.createChild('StreamingManager');
 
 /**
  * Orchestrates streaming providers and synchronizes them with the global EventEmitter.
  */
-
-/**
- * Orchestrates streaming providers and synchronizes them with the global EventEmitter.
- */
-export class StreamingManager implements StreamingAPI {
+export class StreamingManager<E extends StreamingEvents = StreamingEvents> implements StreamingAPI {
     private providers: Map<string, StreamingProvider> = new Map();
     private watchCounts: Map<string, Map<string, number>> = new Map(); // network -> address -> count
     private providerFactories: Map<string, StreamingProviderFactory> = new Map();
 
-    constructor(private eventEmitter: WalletKitEventEmitter) {}
+    constructor(private eventEmitter: EventEmitter<E>) {}
 
     /**
      * Register a provider factory for a specific network.
      */
-    registerProviderFactory(network: Network, factory: StreamingProviderFactory): void {
+    registerProvider(network: Network, factory: StreamingProviderFactory): void {
         const networkId = String(network.chainId);
 
         if (this.providerFactories.has(networkId)) {
@@ -54,7 +51,7 @@ export class StreamingManager implements StreamingAPI {
     watchBalance(network: Network, address: string, onChange: (update: BalanceUpdate) => void): () => void {
         const id = asAddressFriendly(address);
         const unwatchProvider = this.addWatcher(network, 'balance', id);
-        const off = this.eventEmitter.on('balanceUpdate', ({ payload: update }) => {
+        const off = this.eventEmitter.on('streaming:balance-update', ({ payload: update }) => {
             if (compareAddress(address, update.address)) onChange(update);
         });
 
@@ -70,7 +67,7 @@ export class StreamingManager implements StreamingAPI {
     watchTransactions(network: Network, address: string, onChange: (update: TransactionsUpdate) => void): () => void {
         const id = asAddressFriendly(address);
         const unwatchProvider = this.addWatcher(network, 'transactions', id);
-        const off = this.eventEmitter.on('transactions', ({ payload: update }) => {
+        const off = this.eventEmitter.on('streaming:transactions', ({ payload: update }) => {
             if (compareAddress(address, update.address)) onChange(update);
         });
 
@@ -86,7 +83,7 @@ export class StreamingManager implements StreamingAPI {
     watchJettons(network: Network, address: string, onChange: (jetton: JettonUpdate) => void): () => void {
         const id = asAddressFriendly(address);
         const unwatchProvider = this.addWatcher(network, 'jettons', id);
-        const off = this.eventEmitter.on('jettonsUpdate', ({ payload: jetton }) => {
+        const off = this.eventEmitter.on('streaming:jettons-update', ({ payload: jetton }) => {
             if (compareAddress(address, jetton.ownerAddress)) onChange(jetton);
         });
 
@@ -195,9 +192,24 @@ export class StreamingManager implements StreamingAPI {
             network,
             getWatchers: () => this.getWatchers(network),
             listener: {
-                onBalanceUpdate: (update) => this.eventEmitter.emit('balanceUpdate', update, 'streaming-manager'),
-                onTransactions: (update) => this.eventEmitter.emit('transactions', update, 'streaming-manager'),
-                onJettonsUpdate: (update) => this.eventEmitter.emit('jettonsUpdate', update, 'streaming-manager'),
+                onBalanceUpdate: (update) =>
+                    this.eventEmitter.emit(
+                        'streaming:balance-update',
+                        update as E['streaming:balance-update'],
+                        'streaming-manager',
+                    ),
+                onTransactions: (update) =>
+                    this.eventEmitter.emit(
+                        'streaming:transactions',
+                        update as E['streaming:transactions'],
+                        'streaming-manager',
+                    ),
+                onJettonsUpdate: (update) =>
+                    this.eventEmitter.emit(
+                        'streaming:jettons-update',
+                        update as E['streaming:jettons-update'],
+                        'streaming-manager',
+                    ),
             },
         });
 

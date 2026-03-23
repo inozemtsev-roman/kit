@@ -12,7 +12,7 @@ import {
     createDeviceInfo,
     createWalletManifest,
     ApiClientTonApi,
-    createTonCenterStreamingProviderFactory,
+    createTonCenterStreamingProvider,
 } from '@ton/walletkit';
 import type { ITonWalletKit } from '@ton/walletkit';
 import { OmnistonSwapProvider } from '@ton/walletkit/swap/omniston';
@@ -82,13 +82,13 @@ function createWalletKitInstance(walletKitConfig?: WalletKitConfig): ITonWalletK
 
     walletKit.swap.registerProvider(new OmnistonSwapProvider());
 
-    walletKit.streaming.registerProviderFactory(
+    walletKit.streaming.registerProvider(
         Network.mainnet(),
-        createTonCenterStreamingProviderFactory({ apiKey: walletKitConfig?.tonApiKeyMainnet }),
+        createTonCenterStreamingProvider({ apiKey: walletKitConfig?.tonApiKeyMainnet }),
     );
-    walletKit.streaming.registerProviderFactory(
+    walletKit.streaming.registerProvider(
         Network.testnet(),
-        createTonCenterStreamingProviderFactory({ apiKey: walletKitConfig?.tonApiKeyTestnet }),
+        createTonCenterStreamingProvider({ apiKey: walletKitConfig?.tonApiKeyTestnet }),
     );
 
     log.info(`WalletKit initialized with network: ${isExtension() ? 'extension' : 'web'}`);

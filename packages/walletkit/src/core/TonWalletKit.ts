@@ -43,7 +43,7 @@ import type { BridgeManager } from './BridgeManager';
 import type { BridgeEventMessageInfo, InjectedToExtensionBridgeRequestPayload } from '../types/jsBridge';
 import type { ApiClient } from '../types/toncenter/ApiClient';
 import { StreamingManager } from '../streaming/StreamingManager';
-import type { KitEvents, WalletKitEventEmitter } from '../types/emitter';
+import type { WalletKitEvents, WalletKitEventEmitter } from '../types/emitter';
 import { AnalyticsManager } from '../analytics';
 import { getDeviceInfoForWallet } from '../utils/getDefaultWalletConfig';
 import { WalletKitError, ERROR_CODES } from '../errors';
@@ -51,7 +51,7 @@ import { CallForSuccess } from '../utils/retry';
 import type { NetworkManager } from './NetworkManager';
 import { KitNetworkManager } from './NetworkManager';
 import type { WalletId } from '../utils/walletId';
-import type { Wallet, WalletAdapter } from '../api/interfaces';
+import type { StreamingAPI, Wallet, WalletAdapter } from '../api/interfaces';
 import type {
     Network,
     TransactionRequest,
@@ -91,7 +91,7 @@ export class TonWalletKit implements ITonWalletKit {
     private networkManager: NetworkManager;
     private jettonsManager!: JettonsManager;
     private swapManager: SwapManager;
-    private streamingManager: StreamingManager;
+    private streamingManager: StreamingManager<WalletKitEvents>;
     private initializer: Initializer;
     private eventProcessor!: StorageEventProcessor;
     private bridgeManager!: BridgeManager;
@@ -123,9 +123,10 @@ export class TonWalletKit implements ITonWalletKit {
         // Initialize NetworkManager for multi-network support
         this.networkManager = new KitNetworkManager(options);
 
-        this.eventEmitter = new EventEmitter<KitEvents>();
+        this.eventEmitter = new EventEmitter<WalletKitEvents>();
         this.streamingManager = new StreamingManager(this.eventEmitter);
         this.initializer = new Initializer(options, this.eventEmitter, this.analyticsManager);
+
         // Auto-initialize (lazy)
         this.initializationPromise = this.initialize();
 
@@ -821,7 +822,7 @@ export class TonWalletKit implements ITonWalletKit {
     /**
      * Streaming API access
      */
-    get streaming(): StreamingManager {
+    get streaming(): StreamingAPI {
         return this.streamingManager;
     }
 

@@ -59,7 +59,7 @@ function makeManager(network: Network, provider: MockProvider) {
     const emitter = makeMockEventEmitter();
     const factory: StreamingProviderFactory = vi.fn(() => provider);
     const manager = new StreamingManager(emitter);
-    manager.registerProviderFactory(network, factory);
+    manager.registerProvider(network, factory);
     return { manager, emitter, factory: factory as unknown as Mock<StreamingProviderFactory> };
 }
 
@@ -173,7 +173,7 @@ describe('StreamingManager subscriptions', () => {
 
             const event: KitEvent<BalanceUpdate> = {
                 payload: update,
-                type: 'balanceUpdate',
+                type: 'streaming:balance-update',
                 timestamp: Date.now(),
             };
 
@@ -210,7 +210,7 @@ describe('StreamingManager subscriptions', () => {
             });
 
             const manager = new StreamingManager(emitter);
-            manager.registerProviderFactory(network, factory);
+            manager.registerProvider(network, factory);
 
             manager.watchBalance(network, ADDR_A, vi.fn());
             manager.watchJettons(network, ADDR_B, vi.fn());
@@ -233,7 +233,7 @@ describe('StreamingManager subscriptions', () => {
             });
 
             const manager = new StreamingManager(emitter);
-            manager.registerProviderFactory(network, factory);
+            manager.registerProvider(network, factory);
 
             const unwatch = manager.watchBalance(network, ADDR_A, vi.fn());
             manager.watchJettons(network, ADDR_B, vi.fn());
@@ -278,8 +278,8 @@ describe('StreamingManager subscriptions', () => {
             const emitter = makeMockEventEmitter();
             const manager = new StreamingManager(emitter);
 
-            manager.registerProviderFactory(network1, () => provider1);
-            manager.registerProviderFactory(network2, () => provider2);
+            manager.registerProvider(network1, () => provider1);
+            manager.registerProvider(network2, () => provider2);
 
             manager.watchBalance(network1, ADDR_A, vi.fn());
             manager.watchBalance(network2, ADDR_A, vi.fn());

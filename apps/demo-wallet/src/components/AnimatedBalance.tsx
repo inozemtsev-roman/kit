@@ -7,8 +7,14 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+import { formatUnits } from '@ton/walletkit';
 
 const DURATION_MS = 500;
+
+const balanceFormatter = new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+});
 
 /** Ease-out cubic for smooth deceleration at the end */
 function easeOutCubic(t: number): number {
@@ -23,16 +29,19 @@ interface AnimatedBalanceProps {
 }
 
 export const AnimatedBalance: React.FC<AnimatedBalanceProps> = ({ balance, suffix = ' TON', className }) => {
-    const targetValue = parseFloat(balance || '0') / 1e9;
+    const targetValue = parseFloat(formatUnits(balance || '0', 9));
+    const [displayValue, setDisplayValue] = useState(() => balanceFormatter.format(targetValue));
     const displayRef = useRef(targetValue);
-    const [displayValue, setDisplayValue] = useState(targetValue);
     const rafRef = useRef<number | null>(null);
 
     useEffect(() => {
         const startValue = displayRef.current;
         const endValue = targetValue;
 
-        if (startValue === endValue) return;
+        if (Math.abs(startValue - endValue) < 1e-10) {
+            setDisplayValue(balanceFormatter.format(endValue));
+            return;
+        }
 
         const startTime = performance.now();
 
@@ -42,15 +51,21 @@ export const AnimatedBalance: React.FC<AnimatedBalanceProps> = ({ balance, suffi
             const eased = easeOutCubic(progress);
             const current = startValue + (endValue - startValue) * eased;
             displayRef.current = current;
-            setDisplayValue(current);
+            setDisplayValue(balanceFormatter.format(current));
+
             if (progress < 1) {
                 rafRef.current = requestAnimationFrame(animate);
             } else {
                 displayRef.current = endValue;
+                setDisplayValue(balanceFormatter.format(endValue));
             }
         };
 
+        if (rafRef.current !== null) {
+            cancelAnimationFrame(rafRef.current);
+        }
         rafRef.current = requestAnimationFrame(animate);
+
         return () => {
             if (rafRef.current !== null) {
                 cancelAnimationFrame(rafRef.current);
@@ -58,10 +73,9 @@ export const AnimatedBalance: React.FC<AnimatedBalanceProps> = ({ balance, suffi
         };
     }, [targetValue]);
 
-    const formatted = displayValue.toFixed(4);
     return (
         <span className={className}>
-            {formatted}
+            {displayValue}
             {suffix}
         </span>
     );

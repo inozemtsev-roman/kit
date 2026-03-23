@@ -7,6 +7,6 @@
  */
 
 export { TonCenterStreamingProvider } from './provider';
-export { createTonCenterStreamingProviderFactory } from './factory';
+export { createTonCenterStreamingProvider } from './factory';
 
 export type { TonCenterStreamingProviderConfig } from './models';

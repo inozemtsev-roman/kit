@@ -6,12 +6,12 @@
  *
  */
 
-import { SwapManager } from '@ton/walletkit';
+import { SwapManager, StreamingManager } from '@ton/walletkit';
 import type { Provider } from 'src/types/provider';
 
 import type { AppKitConfig } from '../types/config';
 import type { Connector } from '../../../types/connector';
-import { Emitter } from '../../emitter';
+import { EventEmitter } from '../../emitter';
 import { CONNECTOR_EVENTS, WALLETS_EVENTS } from '../constants/events';
 import type { AppKitEmitter, AppKitEvents } from '../types/events';
 import type { WalletInterface } from '../../../types/wallet';
@@ -30,12 +30,13 @@ export class AppKit {
     readonly swapManager: SwapManager;
 
     readonly networkManager: AppKitNetworkManager;
+    readonly streamingManager: StreamingManager;
     readonly config: AppKitConfig;
 
     constructor(config: AppKitConfig) {
         this.config = config;
 
-        this.emitter = new Emitter<AppKitEvents>();
+        this.emitter = new EventEmitter<AppKitEvents>();
         this.emitter.on(CONNECTOR_EVENTS.CONNECTED, this.updateWalletsFromConnectors.bind(this));
         this.emitter.on(CONNECTOR_EVENTS.DISCONNECTED, this.updateWalletsFromConnectors.bind(this));
 
@@ -47,6 +48,7 @@ export class AppKit {
         this.networkManager = new AppKitNetworkManager({ networks }, this.emitter);
         this.walletsManager = new WalletsManager(this.emitter);
         this.swapManager = new SwapManager();
+        this.streamingManager = new StreamingManager(this.emitter);
 
         if (config.connectors) {
             config.connectors.forEach((connector) => {

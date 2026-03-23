@@ -721,7 +721,6 @@ export const createWalletManagementSlice =
             // On confirmed/finalized, refresh events and balance from REST
             if (update.finality === 'confirmed' || update.finality === 'finalized') {
                 void get().loadEvents();
-                void get().updateBalance();
             }
         },
 

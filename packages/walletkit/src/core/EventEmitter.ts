@@ -14,38 +14,37 @@ const log = globalLogger.createChild('EventEmitter');
 
 export type EventPayload = object;
 
-export interface KitEvent<T extends EventPayload = EventPayload> {
+export interface KitEvent<T> {
     type: string;
     payload: T;
     source?: string;
     timestamp: number;
 }
 
-export type EventListener<T extends EventPayload = EventPayload> = (event: KitEvent<T>) => void | Promise<void>;
+export type EventListener<T> = (event: KitEvent<T>) => void | Promise<void>;
 
 /**
  * Global event emitter for the TonWalletKit
  * Allows components to send and receive events throughout the kit.
  */
-export class EventEmitter<Events extends { [K in keyof Events]: EventPayload }> {
-    private listeners: Map<keyof Events, Set<EventListener>> = new Map();
-    // private listeners = new Map<keyof Events, Set<unknown>>();
+export class EventEmitter<Events> {
+    private listeners: { [K in keyof Events]?: Set<EventListener<Events[K]>> } = {};
 
     /**
      * Subscribe to an event.
      * Returns an unsubscribe function.
      */
     on<K extends keyof Events>(eventName: K, listener: EventListener<Events[K]>): () => void {
-        if (!this.listeners.has(eventName)) {
-            this.listeners.set(eventName, new Set());
+        const eventListeners = this.listeners[eventName];
+        if (!eventListeners) {
+            this.listeners[eventName] = new Set([listener]);
+        } else {
+            eventListeners.add(listener);
         }
 
-        const eventListeners = this.listeners.get(eventName)!;
-
-        eventListeners.add(listener as EventListener);
         log.debug('Event listener added', {
             eventName: String(eventName),
-            totalListeners: eventListeners.size,
+            totalListeners: this.listeners[eventName]?.size,
         });
 
         return () => this.off(eventName, listener);
@@ -55,20 +54,20 @@ export class EventEmitter<Events extends { [K in keyof Events]: EventPayload }> 
      * Subscribe to an event once (automatically removes after first emission).
      * Returns an unsubscribe function.
      */
-    once<K extends keyof Events>(type: K, listener: EventListener<Events[K]>): () => void {
+    once<K extends keyof Events>(eventName: K, listener: EventListener<Events[K]>): () => void {
         const wrapper = (event: KitEvent<Events[K]>) => {
-            this.off(type, wrapper);
+            this.off(eventName, wrapper);
             listener(event);
         };
 
-        return this.on(type, wrapper);
+        return this.on(eventName, wrapper);
     }
 
     /**
      * Unsubscribe from an event
      */
-    off<K extends keyof Events>(type: K, listener: EventListener<Events[K]>): void {
-        this.listeners.get(type)?.delete(listener as EventListener);
+    off<K extends keyof Events>(eventName: K, listener: EventListener<Events[K]>): void {
+        this.listeners[eventName]?.delete(listener);
     }
 
     /**
@@ -82,11 +81,11 @@ export class EventEmitter<Events extends { [K in keyof Events]: EventPayload }> 
             payload,
         };
 
-        const listeners = this.listeners.get(eventName);
+        const eventListeners = this.listeners[eventName];
 
-        if (listeners) {
-            listeners.forEach((listener) => {
-                (listener as EventListener<Events[K]>)(event);
+        if (eventListeners) {
+            eventListeners.forEach((listener) => {
+                listener(event);
             });
         }
     }
@@ -96,10 +95,10 @@ export class EventEmitter<Events extends { [K in keyof Events]: EventPayload }> 
      */
     removeAllListeners(eventName?: keyof Events): void {
         if (eventName) {
-            this.listeners.delete(eventName);
+            delete this.listeners[eventName];
             log.debug('All listeners removed for event', { eventName: String(eventName) });
         } else {
-            this.listeners.clear();
+            this.listeners = {};
             log.debug('All event listeners cleared');
         }
     }
@@ -108,14 +107,14 @@ export class EventEmitter<Events extends { [K in keyof Events]: EventPayload }> 
      * Get the number of listeners for an event
      */
     listenerCount(eventName: keyof Events): number {
-        return this.listeners.get(eventName)?.size || 0;
+        return this.listeners[eventName]?.size || 0;
     }
 
     /**
      * Get all event names that have listeners
      */
     eventNames(): string[] {
-        return Array.from(this.listeners.keys()).map((k) => String(k));
+        return Object.keys(this.listeners) as string[];
     }
 }
 

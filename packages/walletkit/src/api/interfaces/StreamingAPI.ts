@@ -20,7 +20,7 @@ export interface StreamingAPI {
     /**
      * Register a provider factory for a specific network.
      */
-    registerProviderFactory(network: Network, factory: StreamingProviderFactory): void;
+    registerProvider(network: Network, factory: StreamingProviderFactory): void;
 
     /**
      * Watch account balance changes.

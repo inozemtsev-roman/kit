@@ -21,7 +21,7 @@ export { Initializer } from './core/Initializer';
 export { JettonsManager } from './core/JettonsManager';
 export { SwapManager, SwapProvider, SwapError } from './defi/swap';
 export { EventEmitter } from './core/EventEmitter';
-export type { EventListener } from './core/EventEmitter';
+export type { EventListener, EventPayload, KitEvent } from './core/EventEmitter';
 export { ApiClientToncenter } from './clients/toncenter';
 export { ApiClientTonApi } from './clients/tonapi';
 export type { NetworkManager } from './core/NetworkManager';
@@ -163,7 +163,7 @@ export { formatUnits, parseUnits } from './utils/units';
 export type * from './api/interfaces';
 export * from './api/models';
 
-export { TonCenterStreamingProvider, createTonCenterStreamingProviderFactory } from './streaming/toncenter';
+export { TonCenterStreamingProvider, createTonCenterStreamingProvider } from './streaming/toncenter';
 export type { TonCenterStreamingProviderConfig } from './streaming/toncenter';
 export { StreamingManager } from './streaming';
 export type {

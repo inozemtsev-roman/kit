@@ -12,7 +12,7 @@ import type { TonCenterStreamingProviderConfig } from './models';
 
 export type TonCenterStreamingFactoryConfig = TonCenterStreamingProviderConfig;
 
-export const createTonCenterStreamingProviderFactory =
+export const createTonCenterStreamingProvider =
     (config?: TonCenterStreamingFactoryConfig): StreamingProviderFactory =>
     (context) => {
         return new TonCenterStreamingProvider(context, config);
