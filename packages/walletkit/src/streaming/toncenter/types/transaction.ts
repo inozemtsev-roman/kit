@@ -96,3 +96,8 @@ export interface StreamingV2TransactionsNotification {
     address_book?: Record<string, AddressBookRowV3>;
     metadata?: TransactionAddressMetadata;
 }
+
+export interface StreamingV2TraceInvalidatedNotification {
+    type: 'trace_invalidated';
+    trace_external_hash_norm: string;
+}

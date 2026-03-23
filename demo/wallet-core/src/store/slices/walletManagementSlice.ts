@@ -658,6 +658,15 @@ export const createWalletManagementSlice =
                 return;
             }
 
+            if (update.invalidated && update.traceHash) {
+                set((s) => {
+                    s.walletManagement.pendingTransactions = s.walletManagement.pendingTransactions.filter(
+                        (p) => p.externalHash !== update.traceHash && p.traceId !== update.traceHash,
+                    );
+                });
+                return;
+            }
+
             const txs = update.transactions as Transaction[];
             if (!txs || txs.length === 0) return;
 

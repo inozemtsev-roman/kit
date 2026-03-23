@@ -26,4 +26,8 @@ export interface TransactionsUpdate extends StreamingBaseUpdate {
     addressBook?: AddressBook;
     /** Metadata from streaming v2 notification */
     metadata?: TransactionAddressMetadata;
+    /** Indicates if the trace was invalidated */
+    invalidated?: boolean;
+    /** The hash of the trace that was invalidated */
+    traceHash?: string;
 }

@@ -6,13 +6,15 @@
  *
  */
 
+import { LRUCache } from 'lru-cache';
+
 import { Network } from '../../api/models';
 import { globalLogger } from '../../core/Logger';
 import type { StreamingProviderContext } from '../../api/interfaces';
 import type { StreamingV2SubscriptionRequest, StreamingV2EventType } from './types';
 import { isAccountStateNotification } from './guards/account';
 import { isJettonsNotification } from './guards/jetton';
-import { isTransactionsNotification } from './guards/transaction';
+import { isTransactionsNotification, isTraceInvalidatedNotification } from './guards/transaction';
 import { asAddressFriendly } from '../../utils';
 import { mapBalance } from './mappers/map-balance';
 import { mapTransactions } from './mappers/map-transactions';
@@ -36,6 +38,7 @@ export class TonCenterStreamingProvider extends WebsocketStreamingProvider {
     private requestId = 0;
     private lastAddresses: Set<string> = new Set();
     private syncTimer: ReturnType<typeof setTimeout> | null = null;
+    private traceCache = new LRUCache<string, { score: number; accounts: Set<string> }>({ max: 10000 });
 
     constructor(context: StreamingProviderContext, config?: TonCenterStreamingProviderConfig) {
         super(context);
@@ -139,19 +142,64 @@ export class TonCenterStreamingProvider extends WebsocketStreamingProvider {
 
             if (isAccountStateNotification(msg)) {
                 const update = mapBalance(msg);
-                this.listener.onBalanceUpdate(update);
+                const watchedBalance = this.getWatchers().get('balance') ?? new Set<string>();
+                if (watchedBalance.has(update.address)) {
+                    this.listener.onBalanceUpdate(update);
+                }
+            }
+
+            if (isTraceInvalidatedNotification(msg)) {
+                log.debug('Trace invalidated', { hash: msg.trace_external_hash_norm });
+                const entry = this.traceCache.get(msg.trace_external_hash_norm);
+                if (entry) {
+                    const watchedTransactions = this.getWatchers().get('transactions') ?? new Set<string>();
+                    entry.accounts.forEach((account) => {
+                        const friendly = asAddressFriendly(account);
+                        if (watchedTransactions.has(friendly)) {
+                            this.listener.onTransactions({
+                                type: 'transactions',
+                                address: friendly,
+                                transactions: [],
+                                invalidated: true,
+                                traceHash: msg.trace_external_hash_norm,
+                            });
+                        }
+                    });
+                    this.traceCache.delete(msg.trace_external_hash_norm);
+                }
+                return;
             }
 
             if (isTransactionsNotification(msg)) {
-                const watchedTransactions = this.getWatchers().get('transactions') ?? new Set<string>();
-                const accounts = new Set<string>();
-                msg.transactions.forEach((tx: { account: string }) => accounts.add(tx.account));
+                const finalityScore = this.getFinalityScore(msg.finality);
+                const entry = this.traceCache.get(msg.trace_external_hash_norm);
 
-                accounts.forEach((account) => {
-                    const friendly = asAddressFriendly(account);
+                if (entry && finalityScore < entry.score) {
+                    log.debug('Ignoring transactions notification due to lower finality', {
+                        hash: msg.trace_external_hash_norm,
+                        msgFinality: msg.finality,
+                        cachedScore: entry.score,
+                    });
+                    return;
+                }
+
+                const traceEntry = entry ?? { score: finalityScore, accounts: new Set<string>() };
+                traceEntry.score = finalityScore;
+                if (!entry) {
+                    this.traceCache.set(msg.trace_external_hash_norm, traceEntry);
+                }
+
+                const watchedTransactions = this.getWatchers().get('transactions') ?? new Set<string>();
+                const uniqueAccounts = new Set<string>();
+
+                msg.transactions.forEach((tx: { account: string }) => {
+                    if (uniqueAccounts.has(tx.account)) return;
+                    uniqueAccounts.add(tx.account);
+                    traceEntry.accounts.add(tx.account);
+
+                    const friendly = asAddressFriendly(tx.account);
                     if (watchedTransactions.has(friendly)) {
-                        const update = mapTransactions(account, msg);
-                        this.listener.onTransactions(update);
+                        this.listener.onTransactions(mapTransactions(tx.account, msg));
                     }
                 });
             }
@@ -188,6 +236,19 @@ export class TonCenterStreamingProvider extends WebsocketStreamingProvider {
                 return 'jettons_change';
             default:
                 return null;
+        }
+    }
+
+    private getFinalityScore(finality: string): number {
+        switch (finality) {
+            case 'pending':
+                return 0;
+            case 'confirmed':
+                return 1;
+            case 'finalized':
+                return 2;
+            default:
+                return -1;
         }
     }
 }

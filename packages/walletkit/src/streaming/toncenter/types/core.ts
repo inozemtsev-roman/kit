@@ -8,7 +8,7 @@
 
 import type { StreamingV2AccountStateNotification } from './account';
 import type { StreamingV2JettonsNotification } from './jetton';
-import type { StreamingV2TransactionsNotification } from './transaction';
+import type { StreamingV2TransactionsNotification, StreamingV2TraceInvalidatedNotification } from './transaction';
 
 export type StreamingV2Finality = 'pending' | 'confirmed' | 'finalized';
 
@@ -25,5 +25,6 @@ export interface StreamingV2SubscriptionRequest {
 
 export type StreamingV2Event =
     | StreamingV2TransactionsNotification
+    | StreamingV2TraceInvalidatedNotification
     | StreamingV2AccountStateNotification
     | StreamingV2JettonsNotification;

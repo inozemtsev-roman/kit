@@ -12,6 +12,7 @@ import { TonCenterStreamingProvider } from './provider';
 import type { StreamingProviderListener, StreamingProviderContext } from '../../api/interfaces/';
 import { Network } from '../../api/models';
 import type { StreamingWatchType } from '../../api/models';
+import { asAddressFriendly } from '../../utils';
 
 // ─── Mocks ──────────────────────────────────────────────────────────────────
 
@@ -225,6 +226,7 @@ describe('TonCenterStreamingProvider', () => {
         };
         const provider = new TonCenterStreamingProvider(context);
 
+        watchers.set('balance', new Set([asAddressFriendly(ADDR_A)]));
         provider.watchBalance(ADDR_A);
         vi.advanceTimersByTime(200);
 
@@ -243,5 +245,199 @@ describe('TonCenterStreamingProvider', () => {
         expect(listener.onBalanceUpdate).toHaveBeenCalled();
         const update = vi.mocked(listener.onBalanceUpdate).mock.calls[0][0];
         expect(update.balance).toBe('1000000000');
+    });
+
+    describe('Finality and Invalidation', () => {
+        let provider: TonCenterStreamingProvider;
+        const TRACE_ID = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=';
+        const FRIENDLY_A = asAddressFriendly(ADDR_A);
+        const FRIENDLY_B = asAddressFriendly(ADDR_B);
+
+        const makeMockTx = (account: string) => ({
+            account,
+            hash: 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB=',
+            lt: '1000',
+            now: 123456789,
+            mc_block_seqno: 100,
+            orig_status: 'active',
+            end_status: 'active',
+            total_fees: '100',
+            trace_id: 'trace-id',
+            description: {
+                type: 'generic',
+                aborted: false,
+                destroyed: false,
+                credit_first: false,
+                is_tock: false,
+                installed: false,
+                storage_ph: { storage_fees_collected: '0', status_change: 'unchanged' },
+                compute_ph: { skipped: true, reason: 'test' },
+            },
+            block_ref: { workchain: 0, shard: '-8000000000000000', seqno: 100 },
+            in_msg: null,
+            out_msgs: [],
+            account_state_before: { balance: '1000' },
+            account_state_after: { balance: '900' },
+        });
+
+        beforeEach(() => {
+            const context = {
+                network: Network.testnet(),
+                listener,
+                getWatchers: () => watchers,
+            };
+            provider = new TonCenterStreamingProvider(context);
+            watchers.set('transactions', new Set([FRIENDLY_A, FRIENDLY_B]));
+        });
+
+        it('ignores notifications with lower finality than cached', () => {
+            const confirmedMsg = {
+                type: 'transactions',
+                finality: 'confirmed',
+                trace_external_hash_norm: TRACE_ID,
+                transactions: [makeMockTx(FRIENDLY_A)],
+            };
+            const pendingMsg = {
+                type: 'transactions',
+                finality: 'pending',
+                trace_external_hash_norm: TRACE_ID,
+                transactions: [makeMockTx(FRIENDLY_A)],
+            };
+
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(confirmedMsg) } as MessageEvent);
+            expect(listener.onTransactions).toHaveBeenCalledTimes(1);
+
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(pendingMsg) } as MessageEvent);
+            expect(listener.onTransactions).toHaveBeenCalledTimes(1);
+        });
+
+        it('processes notifications with higher finality than cached', () => {
+            const pendingMsg = {
+                type: 'transactions',
+                finality: 'pending',
+                trace_external_hash_norm: TRACE_ID,
+                transactions: [makeMockTx(FRIENDLY_A)],
+            };
+            const confirmedMsg = {
+                type: 'transactions',
+                finality: 'confirmed',
+                trace_external_hash_norm: TRACE_ID,
+                transactions: [makeMockTx(FRIENDLY_A)],
+            };
+
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(pendingMsg) } as MessageEvent);
+            expect(listener.onTransactions).toHaveBeenCalledTimes(1);
+
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(confirmedMsg) } as MessageEvent);
+            expect(listener.onTransactions).toHaveBeenCalledTimes(2);
+        });
+
+        it('notifies all participating accounts on trace_invalidated', () => {
+            const traceMsg = {
+                type: 'transactions',
+                finality: 'pending',
+                trace_external_hash_norm: TRACE_ID,
+                transactions: [makeMockTx(FRIENDLY_A), makeMockTx(FRIENDLY_B)],
+            };
+
+            const invalidateMsg = {
+                type: 'trace_invalidated',
+                trace_external_hash_norm: TRACE_ID,
+            };
+
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(traceMsg) } as MessageEvent);
+            expect(listener.onTransactions).toHaveBeenCalledTimes(2);
+
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(invalidateMsg) } as MessageEvent);
+            expect(listener.onTransactions).toHaveBeenCalledTimes(4);
+
+            const lastCalls = vi.mocked(listener.onTransactions).mock.calls.slice(2);
+            expect(lastCalls[0][0]).toMatchObject({
+                address: FRIENDLY_A,
+                invalidated: true,
+                traceHash: expect.any(String), // Hex format
+            });
+            expect(lastCalls[1][0]).toMatchObject({
+                address: FRIENDLY_B,
+                invalidated: true,
+                traceHash: expect.any(String), // Hex format
+            });
+        });
+    });
+
+    describe('Watcher Filtering', () => {
+        let provider: TonCenterStreamingProvider;
+        const FRIENDLY_A = asAddressFriendly(ADDR_A);
+        const FRIENDLY_B = asAddressFriendly(ADDR_B);
+
+        beforeEach(() => {
+            const context = { network: Network.testnet(), listener, getWatchers: () => watchers };
+            provider = new TonCenterStreamingProvider(context);
+            watchers.clear();
+        });
+
+        it('ignores balance updates for non-watched addresses', () => {
+            watchers.set('balance', new Set([FRIENDLY_A]));
+            const msg = {
+                type: 'account_state_change',
+                account: ADDR_B,
+                state: { balance: '1000' },
+            };
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(msg) } as MessageEvent);
+            expect(listener.onBalanceUpdate).not.toHaveBeenCalled();
+        });
+
+        it('ignores transaction updates for non-watched addresses', () => {
+            watchers.set('transactions', new Set([FRIENDLY_A]));
+            const msg = {
+                type: 'transactions',
+                finality: 'pending',
+                trace_external_hash_norm: 'hash',
+                transactions: [
+                    {
+                        account: FRIENDLY_B,
+                        hash: 'hash',
+                        lt: '100',
+                        now: 123,
+                        mc_block_seqno: 1,
+                        description: {
+                            type: 'generic',
+                            aborted: false,
+                            destroyed: false,
+                            credit_first: false,
+                            is_tock: false,
+                            installed: false,
+                            storage_ph: { storage_fees_collected: '0', status_change: '' },
+                            compute_ph: { skipped: true, reason: '' },
+                        },
+                        block_ref: { workchain: 0, shard: '', seqno: 1 },
+                        account_state_before: { balance: '0' },
+                        account_state_after: { balance: '100' },
+                    },
+                ],
+            };
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(msg) } as MessageEvent);
+            expect(listener.onTransactions).not.toHaveBeenCalled();
+        });
+
+        it('ignores jetton updates for non-watched addresses', () => {
+            watchers.set('jettons', new Set([FRIENDLY_A]));
+            const msg = {
+                type: 'jettons_change',
+                owner: FRIENDLY_B,
+                jettons: [],
+            };
+            // @ts-expect-error accessing protected
+            provider.onMessage({ data: JSON.stringify(msg) } as MessageEvent);
+            expect(listener.onJettonsUpdate).not.toHaveBeenCalled();
+        });
     });
 });
