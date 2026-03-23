@@ -6,7 +6,7 @@
  *
  */
 
-import { readFileSync as nodeReadFileSync, writeFileSync as nodeWriteFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import type { Mode, PathOrFileDescriptor, WriteFileOptions } from 'node:fs';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 
@@ -64,14 +64,18 @@ function decodeProtectedText(value: Buffer): ProtectedFileReadResult {
     };
 }
 
-export function readFileSync(path: PathOrFileDescriptor): ProtectedFileReadResult {
-    const raw = nodeReadFileSync(path);
+export function readMaybeEncryptedFile(path: PathOrFileDescriptor): ProtectedFileReadResult {
+    const raw = readFileSync(path);
     return decodeProtectedText(raw);
 }
 
-export function writeFileSync(path: PathOrFileDescriptor, data: string, options?: ProtectedFileWriteOptions): void {
+export function writeMaybeEncryptedFile(
+    path: PathOrFileDescriptor,
+    data: string,
+    options?: ProtectedFileWriteOptions,
+): void {
     const protectedData = encodeProtectedText(data);
-    nodeWriteFileSync(path, protectedData, {
+    writeFileSync(path, protectedData, {
         ...(options?.mode !== undefined ? { mode: options.mode } : {}),
         ...(options?.flag ? { flag: options.flag } : {}),
     });

@@ -22,7 +22,7 @@ import {
 import { formatAssetAddress, formatWalletAddress, normalizeAddressForComparison } from '../utils/address.js';
 import { parsePrivateKeyInput } from '../utils/private-key.js';
 import { createApiClient } from '../utils/ton-client.js';
-import { readFileSync, writeFileSync } from './protected-file.js';
+import { readMaybeEncryptedFile, writeMaybeEncryptedFile } from './protected-file.js';
 
 export type TonNetwork = 'mainnet' | 'testnet';
 export type StandardWalletVersion = 'v5r1' | 'v4r2';
@@ -369,7 +369,7 @@ export function loadConfig(): TonConfig | null {
     let raw: unknown;
     let isProtected: boolean;
     try {
-        const readResult = readFileSync(configPath);
+        const readResult = readMaybeEncryptedFile(configPath);
         raw = JSON.parse(readResult.content);
         isProtected = readResult.isProtected;
     } catch (error) {
@@ -405,7 +405,7 @@ export async function loadConfigWithMigration(): Promise<TonConfig | null> {
     let raw: unknown;
     let isProtected: boolean;
     try {
-        const readResult = readFileSync(configPath);
+        const readResult = readMaybeEncryptedFile(configPath);
         raw = JSON.parse(readResult.content);
         isProtected = readResult.isProtected;
     } catch (error) {
@@ -439,7 +439,7 @@ export async function loadConfigWithMigration(): Promise<TonConfig | null> {
 export function saveConfig(config: TonConfig): void {
     mkdirSync(getConfigDir(), { recursive: true, mode: 0o700 });
     chmodIfExists(getConfigDir(), 0o700);
-    writeFileSync(getConfigPath(), JSON.stringify(normalizeConfig(config), null, 2) + '\n', {
+    writeMaybeEncryptedFile(getConfigPath(), JSON.stringify(normalizeConfig(config), null, 2) + '\n', {
         encoding: 'utf-8',
         mode: 0o600,
     });
