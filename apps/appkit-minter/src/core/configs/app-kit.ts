@@ -7,7 +7,7 @@
  */
 
 import { AppKit, Network } from '@ton/appkit';
-import { TonConnectConnector, ApiClientTonApi } from '@ton/appkit';
+import { TonConnectConnector, ApiClientTonApi, createTonCenterStreamingProvider } from '@ton/appkit';
 import { DeDustSwapProvider } from '@ton/appkit/swap/dedust';
 import { OmnistonSwapProvider } from '@ton/appkit/swap/omniston';
 
@@ -43,3 +43,8 @@ export const appKit = new AppKit({
     ],
     providers: [new DeDustSwapProvider(), new OmnistonSwapProvider()],
 });
+
+appKit.streamingManager.registerProvider(
+    Network.mainnet(),
+    createTonCenterStreamingProvider({ apiKey: ENV_TON_API_KEY_MAINNET }),
+);

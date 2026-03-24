@@ -32,6 +32,35 @@ const balanceByAddress = await getBalanceByAddress(appKit, {
 console.log('Balance by address:', balanceByAddress.toString());
 ```
 
+### `watchBalance`
+
+Watch the TON balance of the currently selected wallet in real-time.
+
+```ts
+const unsubscribe = watchBalance(appKit, {
+    onChange: (balance) => {
+        console.log('Balance updated:', balance);
+    },
+});
+
+// Later: unsubscribe();
+```
+
+### `watchBalanceByAddress`
+
+Watch the TON balance of a specific address in real-time.
+
+```ts
+const unsubscribe = watchBalanceByAddress(appKit, {
+    address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
+    onChange: (balance) => {
+        console.log('Balance by address updated:', balance);
+    },
+});
+
+// Later: unsubscribe();
+```
+
 ## Connectors
 
 ### `connect`
@@ -274,6 +303,15 @@ const unsubscribe = watchNetworks(appKit, {
 // Later: unsubscribe();
 ```
 
+### `hasStreamingProvider`
+
+Check if a real-time streaming provider is registered for a specific network.
+
+```ts
+const isSupported = hasStreamingProvider(appKit, Network.mainnet());
+console.log('Mainnet streaming support:', isSupported);
+```
+
 ### `getBlockNumber`
 
 Get the current masterchain block number.
@@ -352,7 +390,7 @@ Get information about a specific NFT by its address.
 
 ```ts
 const nft = await getNft(appKit, {
-    address: 'EQCA14o1-VWhS29szfbpmbu_m7A_9S4m_Ba6sAyALH_mU68j',
+    address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
 });
 
 if (nft) {
@@ -367,7 +405,7 @@ Create a transaction for transferring a NFT without sending it.
 
 ```ts
 const tx = await createTransferNftTransaction(appKit, {
-    nftAddress: 'EQCA14o1-VWhS29szfbpmbu_m7A_9S4m_Ba6sAyALH_mU68j',
+    nftAddress: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
     recipientAddress: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
     comment: 'Gift NFT',
 });
@@ -381,7 +419,7 @@ Transfer a NFT to a recipient address.
 
 ```ts
 const result = await transferNft(appKit, {
-    nftAddress: 'EQCA14o1-VWhS29szfbpmbu_m7A_9S4m_Ba6sAyALH_mU68j',
+    nftAddress: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
     recipientAddress: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
 });
 
@@ -392,7 +430,7 @@ console.log('NFT Transfer Result:', result);
 
 ### `registerProvider`
 
-Register a custom token swap provider in AppKit (e.g., Omniston).
+Register a custom provider in AppKit (e.g., Swap or Streaming).
 
 ```ts
 const omnistonProvider = new OmnistonSwapProvider({

@@ -39,6 +39,10 @@ describe('use-balance-by-address', () => {
                     getBalance: mockGetBalance,
                 }),
             },
+            streamingManager: {
+                hasProvider: vi.fn().mockReturnValue(false),
+                watchBalance: vi.fn().mockReturnValue(() => {}),
+            },
             walletsManager: {
                 selectedWallet: mockWallet,
             },
@@ -117,6 +121,10 @@ describe('use-balance', () => {
                     getBalance: mockGetBalance,
                 }),
             },
+            streamingManager: {
+                hasProvider: vi.fn().mockReturnValue(false),
+                watchBalance: vi.fn().mockReturnValue(() => {}),
+            },
             walletsManager: {
                 selectedWallet: mockWallet,
             },
@@ -138,11 +146,6 @@ describe('use-balance', () => {
         render(<UseBalanceExample />, {
             wrapper: createWrapper(mockAppKit),
         });
-
-        // It might not show loading immediately if use-address is async or something,
-        // but typically it should. Or if address is present, it starts fetching.
-        // If address is missing, it might not fetch.
-        // We mocked selectedWallet so address is present.
 
         expect(screen.getByText('Loading...')).toBeDefined();
     });

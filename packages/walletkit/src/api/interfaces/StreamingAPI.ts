@@ -18,6 +18,11 @@ import type {
 
 export interface StreamingAPI {
     /**
+     * Check if a provider factory is registered for a specific network.
+     */
+    hasProvider(network: Network): boolean;
+
+    /**
      * Register a provider factory for a specific network.
      */
     registerProvider(network: Network, factory: StreamingProviderFactory): void;

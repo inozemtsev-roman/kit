@@ -46,6 +46,13 @@ export class StreamingManager<E extends StreamingEvents = StreamingEvents> imple
     }
 
     /**
+     * Check if a provider factory is registered for a specific network.
+     */
+    hasProvider(network: Network): boolean {
+        return this.providerFactories.has(String(network.chainId));
+    }
+
+    /**
      * Watch account balance changes.
      */
     watchBalance(network: Network, address: string, onChange: (update: BalanceUpdate) => void): () => void {

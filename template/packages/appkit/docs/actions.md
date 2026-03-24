@@ -20,6 +20,18 @@ Fetch the TON balance of a specific address.
 
 %%demo/examples/src/appkit/actions/balances#GET_BALANCE_BY_ADDRESS%%
 
+### `watchBalance`
+
+Watch the TON balance of the currently selected wallet in real-time.
+
+%%demo/examples/src/appkit/actions/balances#WATCH_BALANCE%%
+
+### `watchBalanceByAddress`
+
+Watch the TON balance of a specific address in real-time.
+
+%%demo/examples/src/appkit/actions/balances#WATCH_BALANCE_BY_ADDRESS%%
+
 ## Connectors
 
 ### `connect`
@@ -128,6 +140,12 @@ Watch configured networks.
 
 %%demo/examples/src/appkit/actions/network#WATCH_NETWORKS%%
 
+### `hasStreamingProvider`
+
+Check if a real-time streaming provider is registered for a specific network.
+
+%%demo/examples/src/appkit/actions/network#HAS_STREAMING_PROVIDER%%
+
 ### `getBlockNumber`
 
 Get the current masterchain block number.
@@ -188,7 +206,7 @@ Transfer a NFT to a recipient address.
 
 ### `registerProvider`
 
-Register a custom token swap provider in AppKit (e.g., Omniston).
+Register a custom provider in AppKit (e.g., Swap or Streaming).
 
 %%demo/examples/src/appkit/actions/providers#REGISTER_PROVIDER%%
 

@@ -12,7 +12,13 @@ export {
     type GetBalanceByAddressOptions,
     type GetBalanceByAddressReturnType,
 } from './balances/get-balance-by-address';
+export {
+    watchBalanceByAddress,
+    type WatchBalanceByAddressOptions,
+    type WatchBalanceByAddressReturnType,
+} from './balances/watch-balance-by-address';
 export { getBalance, type GetBalanceOptions, type GetBalanceReturnType } from './balances/get-balance';
+export { watchBalance, type WatchBalanceOptions, type WatchBalanceReturnType } from './balances/watch-balance';
 
 // Connectors
 export { addConnector, type AddConnectorParameters, type AddConnectorReturnType } from './connectors/add-connector';
@@ -80,6 +86,7 @@ export {
     type WatchDefaultNetworkParameters,
     type WatchDefaultNetworkReturnType,
 } from './network/watch-default-network';
+export { hasStreamingProvider, type HasStreamingProviderReturnType } from './network/has-streaming-provider';
 
 // NFT
 export {
