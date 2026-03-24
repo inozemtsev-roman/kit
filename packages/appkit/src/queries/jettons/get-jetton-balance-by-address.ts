@@ -13,7 +13,7 @@ import { getJettonBalance } from '../../actions/jettons/get-jetton-balance';
 import type { GetJettonBalanceOptions as GetJettonBalanceParameters } from '../../actions/jettons/get-jetton-balance';
 import type { QueryOptions, QueryParameter } from '../../types/query';
 import type { Compute, ExactPartial } from '../../types/utils';
-import { filterQueryOptions } from '../../utils';
+import { filterQueryOptions, resolveNetwork } from '../../utils';
 
 export type GetJettonBalanceErrorType = Error;
 
@@ -31,8 +31,11 @@ export type GetJettonBalanceByAddressQueryConfig<selectData = GetJettonBalanceBy
 
 export const getJettonBalanceByAddressQueryOptions = <selectData = GetJettonBalanceByAddressData>(
     appKit: AppKit,
-    options: GetJettonBalanceByAddressQueryConfig<selectData> = {},
+    initialOptions: GetJettonBalanceByAddressQueryConfig<selectData> = {},
 ): GetJettonBalanceByAddressQueryOptions<selectData> => {
+    const network = resolveNetwork(appKit, initialOptions.network);
+    const options = { ...initialOptions, network };
+
     return {
         ...options.query,
         enabled: Boolean(options.jettonAddress && options.ownerAddress && (options.query?.enabled ?? true)),

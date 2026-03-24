@@ -44,7 +44,13 @@ export const appKit = new AppKit({
     providers: [new DeDustSwapProvider(), new OmnistonSwapProvider()],
 });
 
+// TODO: replace in normal config
 appKit.streamingManager.registerProvider(
     Network.mainnet(),
     createTonCenterStreamingProvider({ apiKey: ENV_TON_API_KEY_MAINNET }),
+);
+
+appKit.streamingManager.registerProvider(
+    Network.testnet(),
+    createTonCenterStreamingProvider({ apiKey: ENV_TON_API_KEY_TESTNET }),
 );

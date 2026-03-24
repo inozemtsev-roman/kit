@@ -10,26 +10,26 @@ import { useCallback, useMemo } from 'react';
 import type { FC, ReactNode, ComponentProps } from 'react';
 import type { SendTransactionParameters, SendTransactionReturnType } from '@ton/appkit';
 
-import { TransactionProvider, useTransactionContext } from '../transaction-provider';
+import { TransactionActionProvider, useTransactionActionContext } from '../transaction-provider';
 import { useI18n } from '../../../../hooks/use-i18n';
 import { Button } from '../../../../components/button';
 
-export interface TransactionRenderProps {
+export interface TransactionActionRenderProps {
     isLoading: boolean;
     onSubmit: () => void;
     disabled: boolean;
     text: ReactNode;
 }
 
-export type TransactionRequest =
+export type TransactionActionRequest =
     | SendTransactionParameters
     | Promise<SendTransactionParameters>
     | (() => SendTransactionParameters)
     | (() => Promise<SendTransactionParameters>);
 
-export interface TransactionProps extends Omit<ComponentProps<'button'>, 'children' | 'onError'> {
+export interface TransactionActionProps extends Omit<ComponentProps<'button'>, 'children' | 'onError'> {
     /** The transaction request parameters */
-    request: TransactionRequest;
+    request: TransactionActionRequest;
     /** Callback when an error occurs */
     onError?: (error: Error) => void;
     /** Callback when the transaction is successful */
@@ -37,16 +37,16 @@ export interface TransactionProps extends Omit<ComponentProps<'button'>, 'childr
     /** Custom button text */
     text?: ReactNode;
     /** Custom render function */
-    children?: (props: TransactionRenderProps) => ReactNode;
+    children?: (props: TransactionActionRenderProps) => ReactNode;
 }
 
-interface TransactionContentProps extends Omit<ComponentProps<'button'>, 'children'> {
+interface TransactionActionContentProps extends Omit<ComponentProps<'button'>, 'children'> {
     text?: ReactNode;
-    children?: (props: TransactionRenderProps) => ReactNode;
+    children?: (props: TransactionActionRenderProps) => ReactNode;
 }
 
-const TransactionContent: FC<TransactionContentProps> = ({ text, children, ...props }) => {
-    const { isLoading, onSubmit, disabled } = useTransactionContext();
+const TransactionActionContent: FC<TransactionActionContentProps> = ({ text, children, ...props }) => {
+    const { isLoading, onSubmit, disabled } = useTransactionActionContext();
     const { t } = useI18n();
 
     const isDisabled = disabled || isLoading;
@@ -85,7 +85,7 @@ const TransactionContent: FC<TransactionContentProps> = ({ text, children, ...pr
     );
 };
 
-export const Transaction: FC<TransactionProps> = ({
+export const TransactionAction: FC<TransactionActionProps> = ({
     request,
     children,
     className,
@@ -96,10 +96,10 @@ export const Transaction: FC<TransactionProps> = ({
     ...props
 }) => {
     return (
-        <TransactionProvider request={request} onError={onError} onSuccess={onSuccess} disabled={disabled}>
-            <TransactionContent className={className} text={text} {...props}>
+        <TransactionActionProvider request={request} onError={onError} onSuccess={onSuccess} disabled={disabled}>
+            <TransactionActionContent className={className} text={text} {...props}>
                 {children}
-            </TransactionContent>
-        </TransactionProvider>
+            </TransactionActionContent>
+        </TransactionActionProvider>
     );
 };

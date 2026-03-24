@@ -20,6 +20,8 @@ export interface TransactionsUpdate extends StreamingBaseUpdate {
     address: UserFriendlyAddress;
     /** The array of transactions */
     transactions: Transaction[];
+    /** The hash of the trace */
+    traceHash: string;
     /** The finality of the update */
     finality?: StreamingFinality;
     /** Address book from streaming v2 notification */
@@ -28,6 +30,4 @@ export interface TransactionsUpdate extends StreamingBaseUpdate {
     metadata?: TransactionAddressMetadata;
     /** Indicates if the trace was invalidated */
     invalidated?: boolean;
-    /** The hash of the trace that was invalidated */
-    traceHash?: string;
 }

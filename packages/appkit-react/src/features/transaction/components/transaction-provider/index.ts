@@ -6,5 +6,9 @@
  *
  */
 
-export { TransactionProvider, useTransactionContext, TransactionContext } from './transaction-provider';
-export type { TransactionContextType } from './transaction-provider';
+export {
+    TransactionActionProvider,
+    useTransactionActionContext,
+    TransactionActionContext,
+} from './transaction-action-provider';
+export type { TransactionActionProviderProps, TransactionActionContextType } from './transaction-action-provider';

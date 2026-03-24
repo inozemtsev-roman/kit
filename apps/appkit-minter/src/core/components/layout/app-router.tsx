@@ -8,29 +8,40 @@
 
 import type React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { watchBalanceByAddress, hasStreamingProvider } from '@ton/appkit';
-import { useAddress, useAppKit, useBalance, useNetwork } from '@ton/appkit-react';
-import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useWatchBalance, useWatchTransactions, useWatchJettons } from '@ton/appkit-react';
+import { toast } from 'sonner';
 
 import { MinterPage } from '@/pages';
 
 export const AppRouter: React.FC = () => {
-    const address = useAddress();
-    const network = useNetwork();
-    const queryClient = useQueryClient();
-    const appKit = useAppKit();
-    const { queryKey } = useBalance();
+    // Enable global real-time balance updates
+    useWatchBalance();
+    useWatchJettons();
 
-    useEffect(() => {
-        if (!address || !network || !hasStreamingProvider(appKit, network)) return;
+    // Enable real-time transaction notifications
+    useWatchTransactions({
+        onChange: (update) => {
+            if (update.traceHash) {
+                const hash = update.traceHash;
+                const shortHash = `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 
-        return watchBalanceByAddress(appKit, {
-            address,
-            network,
-            onChange: (balance) => queryClient.setQueryData(queryKey, balance),
-        });
-    }, [address, network, queryKey]);
+                if (update.finality === 'finalized') {
+                    toast.success(`Transaction ${shortHash} finalized`, {
+                        id: hash,
+                    });
+                } else {
+                    const message =
+                        update.finality === 'confirmed'
+                            ? `Transaction ${shortHash} confirmed`
+                            : `Transaction ${shortHash} pending...`;
+
+                    toast.loading(message, {
+                        id: hash,
+                    });
+                }
+            }
+        },
+    });
 
     return (
         <BrowserRouter>

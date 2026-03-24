@@ -6,5 +6,5 @@
  *
  */
 
-export { Transaction } from './transaction';
-export type { TransactionProps, TransactionRenderProps } from './transaction';
+export { TransactionAction } from './transaction-action';
+export type { TransactionActionProps, TransactionActionRenderProps } from './transaction-action';

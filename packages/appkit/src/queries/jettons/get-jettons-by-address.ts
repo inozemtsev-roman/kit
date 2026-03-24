@@ -11,7 +11,7 @@ import { getJettonsByAddress } from '../../actions/jettons/get-jettons-by-addres
 import type { GetJettonsByAddressOptions } from '../../actions/jettons/get-jettons-by-address';
 import type { QueryOptions, QueryParameter } from '../../types/query';
 import type { Compute, ExactPartial } from '../../types/utils';
-import { filterQueryOptions } from '../../utils';
+import { filterQueryOptions, resolveNetwork } from '../../utils';
 import type { GetJettonsByAddressReturnType } from '../../actions/jettons/get-jettons-by-address';
 
 export type GetJettonsErrorType = Error;
@@ -25,8 +25,11 @@ export type GetJettonsByAddressQueryConfig<selectData = GetJettonsByAddressData>
 
 export const getJettonsByAddressQueryOptions = <selectData = GetJettonsByAddressData>(
     appKit: AppKit,
-    options: GetJettonsByAddressQueryConfig<selectData> = {},
+    initialOptions: GetJettonsByAddressQueryConfig<selectData> = {},
 ): GetJettonsByAddressQueryOptions<selectData> => {
+    const network = resolveNetwork(appKit, initialOptions.network);
+    const options = { ...initialOptions, network };
+
     return {
         ...options.query,
         enabled: Boolean(options.address && (options.query?.enabled ?? true)),

@@ -58,7 +58,13 @@ export {
     type GetJettonsByAddressOptions,
     type GetJettonsByAddressReturnType,
 } from './jettons/get-jettons-by-address';
+export {
+    watchJettonsByAddress,
+    type WatchJettonsByAddressOptions,
+    type WatchJettonsByAddressReturnType,
+} from './jettons/watch-jettons-by-address';
 export { getJettons, type GetJettonsOptions, type GetJettonsReturnType } from './jettons/get-jettons';
+export { watchJettons, type WatchJettonsOptions, type WatchJettonsReturnType } from './jettons/watch-jettons';
 export {
     createTransferJettonTransaction,
     type CreateTransferJettonTransactionParameters,
@@ -128,6 +134,16 @@ export {
     type GetTransactionStatusReturnType,
     type GetTransactionStatusErrorType,
 } from './transaction/get-transaction-status';
+export {
+    watchTransactionsByAddress,
+    type WatchTransactionsByAddressOptions,
+    type WatchTransactionsByAddressReturnType,
+} from './transaction/watch-transactions-by-address';
+export {
+    watchTransactions,
+    type WatchTransactionsOptions,
+    type WatchTransactionsReturnType,
+} from './transaction/watch-transactions';
 export {
     createTransferNftTransaction,
     type CreateTransferNftTransactionParameters,

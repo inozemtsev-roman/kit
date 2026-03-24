@@ -244,7 +244,8 @@ describe('TonCenterStreamingProvider', () => {
 
         expect(listener.onBalanceUpdate).toHaveBeenCalled();
         const update = vi.mocked(listener.onBalanceUpdate).mock.calls[0][0];
-        expect(update.balance).toBe('1000000000');
+        expect(update.rawBalance).toBe('1000000000');
+        expect(update.balance).toBe('1');
     });
 
     describe('Finality and Invalidation', () => {

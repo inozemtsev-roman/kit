@@ -6,24 +6,24 @@
  *
  */
 
-import type { BalanceUpdate, Network } from '@ton/walletkit';
+import type { JettonUpdate, Network } from '@ton/walletkit';
 
 import type { AppKit } from '../../core/app-kit';
 import { WALLETS_EVENTS } from '../../core/app-kit';
 import { getSelectedWallet } from '../wallets/get-selected-wallet';
-import { watchBalanceByAddress } from './watch-balance-by-address';
+import { watchJettonsByAddress } from './watch-jettons-by-address';
 
-export interface WatchBalanceOptions {
+export interface WatchJettonsOptions {
+    onChange: (update: JettonUpdate) => void;
     network?: Network;
-    onChange: (update: BalanceUpdate) => void;
 }
 
-export type WatchBalanceReturnType = () => void;
+export type WatchJettonsReturnType = () => void;
 
 /**
- * Watch account balance changes for the selected wallet.
+ * Watch jetton updates for the selected wallet.
  */
-export const watchBalance = (appKit: AppKit, options: WatchBalanceOptions): WatchBalanceReturnType => {
+export const watchJettons = (appKit: AppKit, options: WatchJettonsOptions): WatchJettonsReturnType => {
     const { network, onChange } = options;
     let unsubscribe: (() => void) | null = null;
 
@@ -35,7 +35,7 @@ export const watchBalance = (appKit: AppKit, options: WatchBalanceOptions): Watc
 
         const selectedWallet = getSelectedWallet(appKit);
         if (selectedWallet) {
-            unsubscribe = watchBalanceByAddress(appKit, {
+            unsubscribe = watchJettonsByAddress(appKit, {
                 address: selectedWallet.getAddress(),
                 network: network ?? selectedWallet.getNetwork(),
                 onChange,
@@ -43,14 +43,14 @@ export const watchBalance = (appKit: AppKit, options: WatchBalanceOptions): Watc
         }
     };
 
-    const off = appKit.emitter.on(WALLETS_EVENTS.SELECTION_CHANGED, updateSubscription);
+    const offSelection = appKit.emitter.on(WALLETS_EVENTS.SELECTION_CHANGED, updateSubscription);
     const offUpdate = appKit.emitter.on(WALLETS_EVENTS.UPDATED, updateSubscription);
 
     updateSubscription();
 
     return () => {
         if (unsubscribe) unsubscribe();
-        off();
+        offSelection();
         offUpdate();
     };
 };

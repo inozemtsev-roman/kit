@@ -8,7 +8,7 @@
 
 import { useMemo } from 'react';
 import type { FC } from 'react';
-import { Transaction, useSwapQuote, useNetwork, useAddress, useBuildSwapTransaction } from '@ton/appkit-react';
+import { TransactionAction, useSwapQuote, useNetwork, useAddress, useBuildSwapTransaction } from '@ton/appkit-react';
 
 const USDT_ADDRESS = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs';
 const TON = { address: 'ton', decimals: 9, symbol: 'TON' };
@@ -64,6 +64,10 @@ export const SwapButton: FC<SwapButtonProps> = ({ amount, direction, providerId 
     }, [isLoading, isError, quote]);
 
     return (
-        <Transaction request={handleBuildSwapTransaction} disabled={!quote || isLoading || isError} text={buttonText} />
+        <TransactionAction
+            request={handleBuildSwapTransaction}
+            disabled={!quote || isLoading || isError}
+            text={buttonText}
+        />
     );
 };

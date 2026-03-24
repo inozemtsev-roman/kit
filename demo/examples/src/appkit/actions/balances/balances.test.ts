@@ -110,7 +110,7 @@ describe('Balance Actions Examples (Integration)', () => {
             appKit.walletsManager.setWallets([mockWallet]);
 
             const mockWatchBalance = vi.fn().mockImplementation((_net, _addr, callback) => {
-                callback({ balance: '2000000000' });
+                callback({ balance: '2', rawBalance: '2000000000', address: VALID_ADDRESS, type: 'balance' });
                 return () => {};
             });
             vi.spyOn(appKit.streamingManager, 'watchBalance').mockImplementation(mockWatchBalance);
@@ -125,7 +125,7 @@ describe('Balance Actions Examples (Integration)', () => {
         it('should log balance updates for specific address', async () => {
             const mockWatchBalance = vi.fn().mockImplementation((_net, addr, callback) => {
                 if (addr === VALID_ADDRESS) {
-                    callback({ balance: '3000000000', address: VALID_ADDRESS });
+                    callback({ balance: '3', rawBalance: '3000000000', address: VALID_ADDRESS, type: 'balance' });
                 }
                 return () => {};
             });

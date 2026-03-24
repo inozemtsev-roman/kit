@@ -43,7 +43,8 @@ describe('Toncenter Mappers', () => {
             };
             const result = mapBalance(notification as unknown as StreamingV2AccountStateNotification);
             expect(result.type).toBe('balance');
-            expect(result.balance).toBe('123000');
+            expect(result.rawBalance).toBe('123000');
+            expect(result.balance).toBe('0.000123');
             expect(result.finality).toBe('confirmed');
             expect(result.address).toBe('EQCD39VS5jcptHL8vMjETmzGaRcCVYto7LUn4bpAOg8xqCPE');
         });

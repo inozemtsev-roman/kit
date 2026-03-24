@@ -12,8 +12,8 @@ import { watchBalance } from '@ton/appkit';
 export const watchBalanceExample = (appKit: AppKit) => {
     // SAMPLE_START: WATCH_BALANCE
     const unsubscribe = watchBalance(appKit, {
-        onChange: (balance) => {
-            console.log('Balance updated:', balance);
+        onChange: (update) => {
+            console.log('Balance updated:', update.balance);
         },
     });
 

@@ -161,6 +161,7 @@ describe('StreamingManager subscriptions', () => {
             // Simulate update
             const update: BalanceUpdate = {
                 address: ADDR_A,
+                rawBalance: '100000000000',
                 balance: '100',
                 type: 'balance',
             };

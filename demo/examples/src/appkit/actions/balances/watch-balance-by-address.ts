@@ -13,8 +13,8 @@ export const watchBalanceByAddressExample = (appKit: AppKit) => {
     // SAMPLE_START: WATCH_BALANCE_BY_ADDRESS
     const unsubscribe = watchBalanceByAddress(appKit, {
         address: 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
-        onChange: (balance) => {
-            console.log('Balance by address updated:', balance);
+        onChange: (update) => {
+            console.log('Balance by address updated:', update.balance);
         },
     });
 

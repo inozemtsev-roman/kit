@@ -11,9 +11,9 @@ import type { FC, PropsWithChildren } from 'react';
 import type { SendTransactionReturnType } from '@ton/appkit';
 
 import { useSendTransaction } from '../../hooks/use-send-transaction';
-import type { TransactionRequest } from '../transaction/transaction';
+import type { TransactionActionRequest } from '../transaction/transaction-action';
 
-export interface TransactionContextType {
+export interface TransactionActionContextType {
     /** Function to submit the transaction */
     onSubmit: () => void;
     /** Whether the transaction is currently loading */
@@ -26,22 +26,22 @@ export interface TransactionContextType {
     disabled?: boolean;
 }
 
-export const TransactionContext = createContext<TransactionContextType>({
+export const TransactionActionContext = createContext<TransactionActionContextType>({
     onSubmit: () => {
         throw new Error('onSubmit is not defined');
     },
     isLoading: false,
 });
 
-export function useTransactionContext() {
-    const context = useContext(TransactionContext);
+export function useTransactionActionContext() {
+    const context = useContext(TransactionActionContext);
 
     return context;
 }
 
-export interface TransactionProviderProps extends PropsWithChildren {
+export interface TransactionActionProviderProps extends PropsWithChildren {
     /** The transaction request parameters */
-    request: TransactionRequest;
+    request: TransactionActionRequest;
     /** Callback when an error occurs */
     onError?: (error: Error) => void;
     /** Callback when the transaction is successful */
@@ -50,7 +50,7 @@ export interface TransactionProviderProps extends PropsWithChildren {
     disabled?: boolean;
 }
 
-export const TransactionProvider: FC<TransactionProviderProps> = ({
+export const TransactionActionProvider: FC<TransactionActionProviderProps> = ({
     children,
     request,
     onError,
@@ -110,5 +110,5 @@ export const TransactionProvider: FC<TransactionProviderProps> = ({
         [mutationError, isPreparing, isPending, handleSubmit, receipt, disabled],
     );
 
-    return <TransactionContext.Provider value={value}>{children}</TransactionContext.Provider>;
+    return <TransactionActionContext.Provider value={value}>{children}</TransactionActionContext.Provider>;
 };

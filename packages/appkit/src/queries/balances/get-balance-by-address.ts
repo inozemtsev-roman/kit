@@ -11,7 +11,7 @@ import { getBalanceByAddress } from '../../actions/balances/get-balance-by-addre
 import type { GetBalanceByAddressOptions } from '../../actions/balances/get-balance-by-address';
 import type { QueryOptions, QueryParameter } from '../../types/query';
 import type { Compute, ExactPartial } from '../../types/utils';
-import { filterQueryOptions } from '../../utils';
+import { filterQueryOptions, resolveNetwork } from '../../utils';
 import type { GetBalanceByAddressReturnType } from '../../actions/balances/get-balance-by-address';
 
 export type GetBalanceErrorType = Error;
@@ -25,8 +25,11 @@ export type GetBalanceByAddressQueryConfig<selectData = GetBalanceByAddressData>
 
 export const getBalanceByAddressQueryOptions = <selectData = GetBalanceByAddressData>(
     appKit: AppKit,
-    options: GetBalanceByAddressQueryConfig<selectData> = {},
+    initialOptions: GetBalanceByAddressQueryConfig<selectData> = {},
 ): GetBalanceByAddressQueryOptions<selectData> => {
+    const network = resolveNetwork(appKit, initialOptions.network);
+    const options = { ...initialOptions, network };
+
     return {
         ...options.query,
         enabled: Boolean(options.address && (options.query?.enabled ?? true)),

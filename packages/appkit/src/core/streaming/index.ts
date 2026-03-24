@@ -16,6 +16,7 @@ export type {
     TonCenterStreamingProviderConfig,
     BalanceUpdate,
     TransactionsUpdate,
+    Transaction,
     JettonUpdate,
     StreamingUpdate,
     StreamingWatchType,

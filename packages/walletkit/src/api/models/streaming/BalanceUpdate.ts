@@ -17,7 +17,9 @@ export interface BalanceUpdate extends StreamingBaseUpdate {
     /** The account address */
     address: UserFriendlyAddress;
     /** The account balance in nano units */
-    balance: TokenAmount;
+    rawBalance: TokenAmount;
+    /** The formatted balance */
+    balance: string;
     /** The finality of the update */
     finality?: StreamingFinality;
 }

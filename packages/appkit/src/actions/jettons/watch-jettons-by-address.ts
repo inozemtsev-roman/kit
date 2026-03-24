@@ -7,29 +7,29 @@
  */
 
 import { Address } from '@ton/core';
-import type { BalanceUpdate, Network } from '@ton/walletkit';
+import type { JettonUpdate, Network } from '@ton/walletkit';
 
 import type { AppKit } from '../../core/app-kit';
 import { resolveNetwork } from '../../utils/network/resolve-network';
 
-export interface WatchBalanceByAddressOptions {
+export interface WatchJettonsByAddressOptions {
     address: string | Address;
+    onChange: (update: JettonUpdate) => void;
     network?: Network;
-    onChange: (update: BalanceUpdate) => void;
 }
 
-export type WatchBalanceByAddressReturnType = () => void;
+export type WatchJettonsByAddressReturnType = () => void;
 
 /**
- * Watch account balance changes by address.
+ * Watch jetton updates by owner address.
  */
-export const watchBalanceByAddress = (
+export const watchJettonsByAddress = (
     appKit: AppKit,
-    options: WatchBalanceByAddressOptions,
-): WatchBalanceByAddressReturnType => {
+    options: WatchJettonsByAddressOptions,
+): WatchJettonsByAddressReturnType => {
     const { address, network, onChange } = options;
     const addressString = Address.isAddress(address) ? address.toString() : Address.parse(address).toString();
     const resolvedNetwork = resolveNetwork(appKit, network);
 
-    return appKit.streamingManager.watchBalance(resolvedNetwork, addressString, onChange);
+    return appKit.streamingManager.watchJettons(resolvedNetwork, addressString, onChange);
 };

@@ -19,6 +19,7 @@ export function mapTransactions(
     return {
         type: 'transactions',
         address: asAddressFriendly(account),
+        traceHash: notification.trace_external_hash_norm,
         transactions: notification.transactions
             .filter((tx) => compareAddress(tx.account, account))
             .map((tx) => toStreamingTransaction(tx, notification.trace_external_hash_norm)),

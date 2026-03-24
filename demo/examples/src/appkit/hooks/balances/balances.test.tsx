@@ -10,11 +10,14 @@
 
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { Network } from '@ton/walletkit';
 import type { TokenAmount } from '@ton/walletkit';
 
 import { createWrapper } from '../../../__tests__/test-utils';
 import { UseBalanceExample } from './use-balance';
 import { UseBalanceByAddressExample } from './use-balance-by-address';
+import { UseWatchBalanceExample } from './use-watch-balance';
+import { UseWatchBalanceByAddressExample } from './use-watch-balance-by-address';
 
 describe('use-balance-by-address', () => {
     let mockAppKit: any;
@@ -176,5 +179,94 @@ describe('use-balance', () => {
         await waitFor(() => {
             expect(screen.getByText('Error: Failed to fetch balance')).toBeDefined();
         });
+    });
+});
+
+describe('use-watch-balance-by-address', () => {
+    let mockAppKit: any;
+
+    beforeEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+
+        mockAppKit = {
+            connectors: [],
+            walletsManager: {
+                selectedWallet: {
+                    getAddress: () => 'UQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJKZ',
+                    getNetwork: () => Network.mainnet(),
+                },
+            },
+            networkManager: {
+                getClient: vi.fn().mockReturnValue({
+                    getBalance: vi.fn().mockResolvedValue({ toString: () => '0' }),
+                }),
+            },
+            streamingManager: {
+                hasProvider: vi.fn().mockReturnValue(true),
+                watchBalance: vi.fn().mockReturnValue(() => {}),
+            },
+            emitter: {
+                on: vi.fn().mockReturnValue(() => {}),
+                off: vi.fn(),
+            },
+        };
+    });
+
+    it('should start watching balance', async () => {
+        render(<UseWatchBalanceByAddressExample />, {
+            wrapper: createWrapper(mockAppKit),
+        });
+
+        await waitFor(() => {
+            expect(mockAppKit.streamingManager.watchBalance).toHaveBeenCalled();
+        });
+        expect(screen.getByText(/Current balance:/)).toBeDefined();
+    });
+});
+
+describe('use-watch-balance', () => {
+    let mockAppKit: any;
+    let mockGetBalance: any;
+
+    beforeEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+
+        mockGetBalance = vi.fn().mockResolvedValue({ toString: () => '0' });
+
+        const mockWallet = {
+            getAddress: () => 'EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c',
+            getNetwork: () => Network.mainnet(),
+        };
+
+        mockAppKit = {
+            connectors: [],
+            walletsManager: {
+                selectedWallet: mockWallet,
+            },
+            networkManager: {
+                getClient: vi.fn().mockReturnValue({
+                    getBalance: mockGetBalance,
+                }),
+            },
+            streamingManager: {
+                hasProvider: vi.fn().mockReturnValue(true),
+                watchBalance: vi.fn().mockReturnValue(() => {}),
+            },
+            emitter: {
+                on: vi.fn().mockReturnValue(() => {}),
+                off: vi.fn(),
+            },
+        };
+    });
+
+    it('should start watching balance for the selected wallet', () => {
+        render(<UseWatchBalanceExample />, {
+            wrapper: createWrapper(mockAppKit),
+        });
+
+        expect(mockAppKit.streamingManager.watchBalance).toHaveBeenCalled();
+        expect(screen.getByText(/Current balance:/)).toBeDefined();
     });
 });
