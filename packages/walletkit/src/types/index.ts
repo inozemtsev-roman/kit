@@ -78,7 +78,7 @@ export type {
 export type { NftItem } from './toncenter/NftItem';
 
 export type { NftItems } from './toncenter/NftItems';
-export { emulationEvent } from './toncenter/AccountEvent';
+export { emulationEvent, toEvent, toAddressBook } from './toncenter/AccountEvent';
 
 // Account Event types
 export type {

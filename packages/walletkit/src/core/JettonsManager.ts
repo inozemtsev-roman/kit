@@ -14,7 +14,7 @@ import type { ChainId } from '@tonconnect/protocol';
 
 import type { EmulationTokenInfoMasters } from '../types/toncenter/emulation';
 import { globalLogger } from './Logger';
-import type { EventEmitter } from './EventEmitter';
+import type { WalletKitEventEmitter } from '../types/emitter';
 import type { JettonInfo, JettonsAPI } from '../types/jettons';
 import { JettonError, JettonErrorCode } from '../types/jettons';
 import type { NetworkManager } from './NetworkManager';
@@ -41,7 +41,7 @@ export class JettonsManager implements JettonsAPI {
 
     constructor(
         cacheSize: number = 10000,
-        private eventEmitter: EventEmitter,
+        private eventEmitter: WalletKitEventEmitter,
         private networkManager: NetworkManager,
     ) {
         this.cache = new LRUCache({
@@ -58,7 +58,7 @@ export class JettonsManager implements JettonsAPI {
 
         // Set up event listener for emulation results for jetton caching
         // TODO Fix network in emulation result
-        this.eventEmitter.on('emulation:result', (emulationResult: unknown) => {
+        this.eventEmitter.on('emulationResult', (emulationResult) => {
             if (
                 emulationResult &&
                 typeof emulationResult === 'object' &&

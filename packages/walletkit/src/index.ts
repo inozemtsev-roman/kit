@@ -21,7 +21,7 @@ export { Initializer } from './core/Initializer';
 export { JettonsManager } from './core/JettonsManager';
 export { SwapManager, SwapProvider, SwapError } from './defi/swap';
 export { EventEmitter } from './core/EventEmitter';
-export type { EventListener } from './core/EventEmitter';
+export type { EventListener, EventPayload, KitEvent } from './core/EventEmitter';
 export { ApiClientToncenter } from './clients/toncenter';
 export { ApiClientTonApi } from './clients/tonapi';
 export type { NetworkManager } from './core/NetworkManager';
@@ -37,6 +37,7 @@ export type { WalletV5Config } from './contracts/w5/WalletV5R1';
 export { WalletV5R1CodeCell, WalletV5R1CodeBoc } from './contracts/w5/WalletV5R1.source';
 export { WalletV5R1Adapter } from './contracts/w5/WalletV5R1Adapter';
 export { defaultWalletIdV5R1 } from './contracts/w5/WalletV5R1Adapter';
+export { ActionSendMsg, packActionsList } from './contracts/w5/actions';
 export { WalletV4R2 } from './contracts/v4r2/WalletV4R2';
 export type { WalletV4R2Config } from './contracts/v4r2/WalletV4R2';
 export { WalletV4R2CodeCell } from './contracts/v4r2/WalletV4R2.source';
@@ -96,7 +97,7 @@ export { DefaultSignature, DefaultDomainSignature, FakeSignature } from './utils
 export { wrapWalletInterface } from './core/Initializer';
 export type { NftTransferParamsHuman, NftTransferParamsRaw } from './types/nfts';
 
-export { isValidAddress } from './utils/address';
+export { isValidAddress, compareAddress } from './utils/address';
 export { validateTransactionMessage } from './validation';
 export { createDeviceInfo, createWalletManifest, getMaxOutgoingMessages } from './utils/getDefaultWalletConfig';
 export { Signer } from './utils/Signer';
@@ -161,3 +162,13 @@ export { formatUnits, parseUnits } from './utils/units';
 // API Interfaces
 export type * from './api/interfaces';
 export * from './api/models';
+
+export { TonCenterStreamingProvider, createTonCenterStreamingProvider } from './streaming/toncenter';
+export type { TonCenterStreamingProviderConfig } from './streaming/toncenter';
+export { StreamingManager } from './streaming';
+export type {
+    StreamingProvider,
+    StreamingProviderListener,
+    StreamingProviderFactory,
+} from './api/interfaces/StreamingProvider';
+export type { StreamingAPI } from './api/interfaces/StreamingAPI';
