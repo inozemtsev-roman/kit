@@ -26,7 +26,7 @@ Choose one control path per task: either run `@ton/mcp` as an MCP server (stdio 
 
 Self-custody wallets for autonomous agents. Your AI agent gets TON wallet capabilities — transfers, swaps, NFTs. User keeps the master key, agent keeps the operator key.
 
-**Learn more about [Agentic Wallets](https://agentic-wallets-dashboard.vercel.app/).**
+**Learn more about [Agentic Wallets](https://agents.ton.org/).**
 
 Agentic Wallets mode is the default mode that allows you to manage agentic wallets. To create your first agentic wallet, ask your agent to `create agentic wallet` and follow the instructions.
 
