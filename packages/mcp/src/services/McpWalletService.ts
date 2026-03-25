@@ -935,6 +935,26 @@ export class McpWalletService {
     }
 
     /**
+     * Emulate a transaction without broadcasting it.
+     * Returns the emulated preview with money flow analysis.
+     */
+    async emulateTransaction(params: {
+        messages: Array<{
+            address: string;
+            amount: string;
+            stateInit?: string;
+            payload?: string;
+        }>;
+        validUntil?: number;
+    }) {
+        const preview = await this.wallet.getTransactionPreview({
+            messages: params.messages as TransactionRequest['messages'],
+            validUntil: params.validUntil,
+        });
+        return preview;
+    }
+
+    /**
      * Get all NFTs
      */
     async getNfts(limit: number = 20, offset: number = 0): Promise<NftInfoResult[]> {
