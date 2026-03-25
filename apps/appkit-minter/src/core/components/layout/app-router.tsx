@@ -26,17 +26,20 @@ export const AppRouter: React.FC = () => {
                 const shortHash = `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 
                 if (update.status === 'invalidated') {
-                    toast.error(`Transaction ${shortHash} invalidated`, { id: hash });
+                    toast.error(`Transaction invalidated`, { id: hash, description: shortHash });
                 } else if (update.status === 'finalized') {
-                    toast.success(`Transaction ${shortHash} finalized`, { id: hash });
-                } else {
-                    const message =
-                        update.status === 'confirmed'
-                            ? `Transaction ${shortHash} confirmed`
-                            : `Transaction ${shortHash} pending...`;
-
-                    toast.loading(message, {
+                    toast.success(`Transaction finalized`, {
                         id: hash,
+                        description: shortHash,
+                        action: {
+                            label: 'View',
+                            onClick: () => window.open(`https://tonviewer.com/transaction/${hash}`, '_blank'),
+                        },
+                    });
+                } else {
+                    toast.loading(update.status === 'confirmed' ? `Transaction confirmed` : `Transaction pending...`, {
+                        id: hash,
+                        description: shortHash,
                     });
                 }
             }
