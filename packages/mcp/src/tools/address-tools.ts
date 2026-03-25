@@ -34,7 +34,7 @@ export const getNftsByAddressSchema = z.object({
 });
 
 export const getJettonInfoSchema = z.object({
-    address: z.string().min(1).describe('Jetton master contract address'),
+    jettonAddress: z.string().min(1).describe('Jetton master contract address'),
 });
 
 export const getJettonWalletAddressSchema = z.object({
@@ -197,7 +197,7 @@ export function createMcpAddressTools(service: McpWalletService) {
             inputSchema: getJettonInfoSchema,
             handler: async (args: z.infer<typeof getJettonInfoSchema>): Promise<ToolResponse> => {
                 try {
-                    const jettonInfo = await service.getJettonInfo(args.address);
+                    const jettonInfo = await service.getJettonInfo(args.jettonAddress);
 
                     if (!jettonInfo) {
                         return {

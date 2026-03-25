@@ -21,15 +21,17 @@ Backed **xStocks** are jettons on TON. Resolve the **jetton master** from the pu
 
 ## Resolve the TON jetton master for an xStock
 
-1. **By symbol** (e.g. `TSLAx`): fetch  
-   `GET https://api.xstocks.fi/api/v2/public/assets/{symbol}`  
+1. **By symbol** (e.g. `TSLAx`): fetch via **`curl`** (not WebFetch — the xStocks API returns 403 for non-standard user-agents):
+   ```bash
+   curl -s "https://api.xstocks.fi/api/v2/public/assets/{symbol}"
+   ```
    (production base: `https://api.xstocks.fi/api/v2` — see [xStocks API](https://docs.xstocks.fi/apis/openapi)).
 
 2. In the JSON, find `deployments[]` where **`network` is `"Ton"`**. Use that object's **`address`** as the jetton master for MCP (`fromToken` / `toToken`).
 
-3. Optional: `GET https://api.xstocks.fi/api/v2/public/assets` returns all assets with the same `deployments` shape.
+3. Optional: `curl -s "https://api.xstocks.fi/api/v2/public/assets"` returns all assets with the same `deployments` shape.
 
-4. Call `get_jetton_info` with that address to confirm **name / symbol / decimals** before swapping.
+4. Call `get_jetton_info` with `--jettonAddress <jetton_master>` to confirm **name / symbol / decimals** before swapping.
 
 ## MCP tools
 
@@ -42,6 +44,20 @@ Backed **xStocks** are jettons on TON. Resolve the **jetton master** from the pu
 
 Amounts for `get_swap_quote` are **human-readable** strings (respect jetton decimals from `get_jetton_info`).
 
+## CLI argument names (exact)
+
+| Tool | Arg | CLI flag |
+| ---- | --- | -------- |
+| `get_jetton_info` | jettonAddress | `--jettonAddress` |
+| `get_jetton_balance` | jettonAddress | `--jettonAddress` |
+| `get_swap_quote` | fromToken | `--fromToken` (use `"TON"` for native TON, jetton master address for tokens) |
+| `get_swap_quote` | toToken | `--toToken` |
+| `get_swap_quote` | amount | `--amount` (human-readable) |
+| `get_swap_quote` | slippageBps | `--slippageBps` (default 100 = 1%) |
+| `emulate_transaction` | messages | `--messages` (JSON array from quote's `transaction.messages`) |
+| `send_raw_transaction` | messages | `--messages` (same JSON array) |
+| `get_transaction_status` | normalizedHash | `--normalizedHash` |
+
 ## Pre-fund USDT (auto, when needed)
 
 Before any xStock trade, check the user's USDT balance:
@@ -49,7 +65,7 @@ Before any xStock trade, check the user's USDT balance:
 1. `get_jetton_balance` for the USDT master address — use the `amount` field for comparison.
 2. If `amount` **< required amount** for the planned buy:
    a. Calculate the shortfall (include a small buffer for price movement).
-   b. `get_swap_quote` with `fromToken` = native TON, `toToken` = USDT master, `amount` = shortfall.
+   b. `get_swap_quote` with `fromToken` = `"TON"` (the literal string, not an address), `toToken` = USDT master, `amount` = shortfall.
    c. Confirm with the user: *"You need ~X USDT but only have Y. Swap Z TON → X USDT first?"*
    d. On approval, `send_raw_transaction` → poll `get_transaction_status` until `completed`.
    e. Re-check USDT balance before proceeding to the xStock buy.
@@ -62,7 +78,7 @@ Before any xStock trade, check the user's USDT balance:
 4. `emulate_transaction` with the quote's `transaction.messages` — verify expected balance changes before sending.
 5. Show the user: **fromAmount**, **toAmount**, **minReceived**, **expiresAt**, emulation results, and note the forward **TON** on router messages (gas).
 6. Confirm once, then `send_raw_transaction` with the returned `transaction.messages`.
-6. Poll `get_transaction_status` on `normalizedHash` until `completed` or `failed`.
+7. Poll `get_transaction_status` on `normalizedHash` until `completed` or `failed`.
 
 > **Do not attempt TON → xStock directly.** It will return no quote. Always route through USDT.
 

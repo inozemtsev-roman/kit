@@ -15,11 +15,11 @@ Read-only queries for wallet balances, token holdings, and transaction history o
 | ---- | -------- | -------- |
 | `get_wallet` | — | `walletSelector` |
 | `get_balance` | — | `walletSelector` |
-| `get_balance_by_address` | `address` | — |
+| `get_balance_by_address` | `address` | `walletSelector` |
 | `get_jetton_balance` | `jettonAddress` | `walletSelector` |
 | `get_jettons` | — | `walletSelector` |
-| `get_jettons_by_address` | `address` | — |
-| `get_jetton_info` | `address` | — |
+| `get_jettons_by_address` | `address` | `limit`, `offset`, `walletSelector` |
+| `get_jetton_info` | `jettonAddress` | `walletSelector` |
 | `get_known_jettons` | — | — |
 | `get_transactions` | — | `limit`, `walletSelector` |
 | `get_transaction_status` | `normalizedHash` | `walletSelector` |
