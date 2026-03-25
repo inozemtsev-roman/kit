@@ -45,6 +45,7 @@ import type { NetworkType } from '../types/config.js';
 import { AgenticWalletCodeCell } from '../contracts/agentic_wallet/AgenticWallet.source.js';
 import { createApiClient } from '../utils/ton-client.js';
 import { UINT_256_MAX } from '../utils/math.js';
+import type { OmnistonSwapOptions } from '../../../walletkit/dist/esm/defi/swap/omniston/models/OmnistonSwapOptions.js';
 
 const OP_DEPLOY_WALLET = 0x0609e47b;
 const AGENTIC_DEFAULT_VALID_UNTIL = 600;
@@ -898,6 +899,9 @@ export class McpWalletService {
             amount: amount,
             network,
             slippageBps,
+            providerOptions: {
+                settlementMethods: ['SETTLEMENT_METHOD_SWAP'],
+            } as OmnistonSwapOptions,
         };
 
         const quote = await kit.swap.getQuote(params);
