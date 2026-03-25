@@ -19,6 +19,7 @@
   "changesets": [
     "bright-poets-jog",
     "cli-help-flag",
+    "fix-jetton-balance-exit-code",
     "fix-jetton-param-naming",
     "short-kings-flow",
     "tricky-bags-retire",

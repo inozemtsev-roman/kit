@@ -1,5 +1,11 @@
 # @ton/walletkit
 
+## 0.0.12-alpha.1
+
+### Patch Changes
+
+- Fixed `getJettonBalanceFromClient` to return `'0'` when the jetton wallet contract returns a non-zero exit code instead of throwing
+
 ## 0.0.12-alpha.0
 
 ### Patch Changes
