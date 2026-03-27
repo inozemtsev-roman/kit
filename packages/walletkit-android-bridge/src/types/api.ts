@@ -342,7 +342,7 @@ export interface WalletKitBridgeApi {
     // Swap
     createOmnistonSwapProvider(args: CreateOmnistonSwapProviderArgs): PromiseOrValue<{ providerId: string }>;
     createDeDustSwapProvider(args: CreateDeDustSwapProviderArgs): PromiseOrValue<{ providerId: string }>;
-    registerSwapProvider(args: RegisterSwapProviderArgs): PromiseOrValue<{ ok: boolean }>;
+    registerSwapProvider(args: RegisterSwapProviderArgs): PromiseOrValue<void>;
     getSwapQuote(args: GetSwapQuoteArgs): PromiseOrValue<unknown>;
     buildSwapTransaction(args: BuildSwapTransactionArgs): PromiseOrValue<unknown>;
 }

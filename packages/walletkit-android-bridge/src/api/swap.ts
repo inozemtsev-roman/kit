@@ -15,24 +15,25 @@ import type { SwapProviderInterface, SwapQuote, SwapQuoteParams, SwapParams, Tra
 import { getKit } from '../utils/bridge';
 import { retainWithId, get } from '../utils/registry';
 
-export async function createOmnistonSwapProvider(args: { config?: OmnistonSwapProviderConfig }): Promise<{ providerId: string }> {
+export async function createOmnistonSwapProvider(args: {
+    config?: OmnistonSwapProviderConfig;
+}): Promise<{ providerId: string }> {
     const provider = new OmnistonSwapProvider(args.config);
     retainWithId(provider.providerId, provider);
     return { providerId: provider.providerId };
 }
 
-export async function createDeDustSwapProvider(args: { config?: DeDustSwapProviderConfig }): Promise<{ providerId: string }> {
+export async function createDeDustSwapProvider(args: {
+    config?: DeDustSwapProviderConfig;
+}): Promise<{ providerId: string }> {
     const provider = new DeDustSwapProvider(args.config);
     retainWithId(provider.providerId, provider);
     return { providerId: provider.providerId };
 }
 
-export async function registerSwapProvider(args: { providerId: string }): Promise<{ ok: boolean }> {
-    const kit = await getKit();
-    const provider = get<SwapProviderInterface>(args.providerId);
-    if (!provider) throw new Error(`Swap provider '${args.providerId}' not found`);
-    kit.swap!.registerProvider(provider);
-    return { ok: true };
+export async function registerSwapProvider(args: { providerId: string }): Promise<void> {
+    const instance = await getKit();
+    instance.swap!.registerProvider(get<SwapProviderInterface>(args.providerId)!);
 }
 
 export async function getSwapQuote(args: { params: SwapQuoteParams; providerId?: string }): Promise<SwapQuote> {
