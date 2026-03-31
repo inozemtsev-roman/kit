@@ -749,6 +749,12 @@ class DiscriminatedUnionTypeFormatter {
         if (!(type instanceof tsj.UnionType) || type.getTypes().length < 2) {
             return false;
         }
+        // If the union has a discriminator set (from @discriminator annotation),
+        // let the default UnionTypeFormatter handle it — it produces allOf/if/then
+        // which postProcessDiscriminatedUnions() transforms into x-interface-union.
+        if (type.getDiscriminator?.()) {
+            return false;
+        }
         const isDiscriminated = type.getTypes().every((variant) => this.getDiscriminatorValue(variant) !== null);
         if (!isDiscriminated) {
             return false;
