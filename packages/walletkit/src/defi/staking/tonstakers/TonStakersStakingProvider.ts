@@ -129,7 +129,7 @@ export class TonStakersStakingProvider extends StakingProvider {
             // User burns tsTON, receives TON: TON = tsTON * rate
             const amountInTokens = Number(params.amount);
             const amountOutTokens =
-                params.unstakeMode === UnstakeMode.INSTANT
+                params.unstakeMode === UnstakeMode.INSTANT || params.unstakeMode === UnstakeMode.WHEN_AVAILABLE
                     ? amountInTokens * rates.tsTONTON
                     : amountInTokens * rates.tsTONTONProjected;
             const amountOut = amountOutTokens.toFixed(9);
