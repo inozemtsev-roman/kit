@@ -41,12 +41,5 @@ export const appKit = new AppKit({
             },
         }),
     ],
-    providers: [
-        new DeDustSwapProvider(),
-        new OmnistonSwapProvider(),
-        createTonstakersProvider({
-            [Network.mainnet().chainId]: { tonApiToken: ENV_TON_API_KEY_MAINNET },
-            [Network.testnet().chainId]: { tonApiToken: ENV_TON_API_KEY_TESTNET },
-        }),
-    ],
+    providers: [new DeDustSwapProvider(), new OmnistonSwapProvider(), createTonstakersProvider({})],
 });

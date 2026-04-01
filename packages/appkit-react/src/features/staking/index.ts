@@ -6,6 +6,8 @@
  *
  */
 
+export { UnstakeMode, type UnstakeModes } from '@ton/walletkit';
+
 export {
     useStakingProviders,
     type UseStakingProvidersParameters,

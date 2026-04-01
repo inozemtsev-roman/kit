@@ -15,7 +15,7 @@ import { NftsCard } from '@/features/nft';
 import { WalletInfo } from '@/features/wallet';
 import { Card, Layout } from '@/core/components';
 import { SwapButton } from '@/features/swap';
-import { StakeButton } from '@/features/staking';
+import { StakingCard } from '@/features/staking';
 import { SignMessageCard } from '@/features/signing';
 
 export const MinterPage: React.FC = () => {
@@ -52,13 +52,7 @@ export const MinterPage: React.FC = () => {
                             </div>
                         </Card>
 
-                        <Card title="Staking">
-                            <div className="flex flex-col gap-2">
-                                <div>Tonstakers:</div>
-                                <StakeButton amount="1" direction="stake" />
-                                <StakeButton amount="1" direction="unstake" />
-                            </div>
-                        </Card>
+                        <StakingCard />
                     </div>
                 )}
             </div>

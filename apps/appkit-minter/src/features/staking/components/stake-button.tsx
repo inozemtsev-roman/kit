@@ -8,15 +8,35 @@
 
 import { useMemo } from 'react';
 import type { FC } from 'react';
-import { Transaction, useStakingQuote, useNetwork, useAddress, useBuildStakeTransaction } from '@ton/appkit-react';
+import {
+    Transaction,
+    UnstakeMode,
+    useStakingQuote,
+    useNetwork,
+    useAddress,
+    useBuildStakeTransaction,
+} from '@ton/appkit-react';
+import type { UnstakeModes } from '@ton/appkit-react';
 
 interface StakeButtonProps {
     amount: string;
     direction: 'stake' | 'unstake';
     providerId?: string;
+    /** When false, quote fetching is disabled (e.g. invalid custom amount). */
+    quoteEnabled?: boolean;
+    /** Used when `direction` is `unstake`; defaults to instant. */
+    unstakeMode?: UnstakeModes;
+    className?: string;
 }
 
-export const StakeButton: FC<StakeButtonProps> = ({ amount, direction, providerId }) => {
+export const StakeButton: FC<StakeButtonProps> = ({
+    amount,
+    direction,
+    providerId,
+    quoteEnabled = true,
+    unstakeMode = UnstakeMode.INSTANT,
+    className = undefined,
+}) => {
     const network = useNetwork();
     const address = useAddress();
 
@@ -29,6 +49,8 @@ export const StakeButton: FC<StakeButtonProps> = ({ amount, direction, providerI
         direction,
         network,
         providerId,
+        ...(direction === 'unstake' ? { unstakeMode } : {}),
+        query: { enabled: quoteEnabled },
     });
 
     const { mutateAsync: buildStakeTransaction } = useBuildStakeTransaction();
@@ -57,5 +79,12 @@ export const StakeButton: FC<StakeButtonProps> = ({ amount, direction, providerI
         return `${action} ${quote.amountIn} ${direction === 'stake' ? 'TON' : 'tsTON'} -> ${quote.amountOut} ${direction === 'stake' ? 'tsTON' : 'TON'}`;
     }, [isLoading, isError, quote, direction]);
 
-    return <Transaction request={handleTransaction} disabled={!quote || isLoading || isError} text={buttonText} />;
+    return (
+        <Transaction
+            request={handleTransaction}
+            disabled={!quoteEnabled || !quote || isLoading || isError}
+            text={buttonText}
+            className={className}
+        />
+    );
 };

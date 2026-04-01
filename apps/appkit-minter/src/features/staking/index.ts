@@ -7,3 +7,4 @@
  */
 
 export * from './components/stake-button';
+export * from './components/staking-card';
