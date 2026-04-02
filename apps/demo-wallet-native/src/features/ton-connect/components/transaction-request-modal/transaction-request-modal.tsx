@@ -13,8 +13,7 @@ import { useState, useMemo, useEffect } from 'react';
 import type { FC } from 'react';
 import { Linking, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { useWallet, useWalletStore } from '@demo/wallet-core';
-import { useWalletKit } from '@demo/wallet-core';
+import { useWallet, useWalletStore, useWalletKit, getTransactionExplorerUrls } from '@demo/wallet-core';
 
 import { DAppInfo } from '../dapp-info';
 import { JettonFlowItem } from '../jetton-flow-item';
@@ -30,7 +29,6 @@ import { WalletInfoBlock } from '@/features/wallets';
 import { getErrorMessage } from '@/core/utils/errors/get-error-message';
 import { getLedgerErrorMessage } from '@/features/ledger';
 import { useAppToasts } from '@/features/toasts';
-import { getTransactionExplorerUrls } from '@/core/utils/explorer-urls';
 
 interface TransactionRequestModalProps {
     request: SendTransactionRequestEvent;

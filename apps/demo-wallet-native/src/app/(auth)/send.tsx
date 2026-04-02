@@ -14,7 +14,7 @@ import { useMemo, useState } from 'react';
 import type { FC } from 'react';
 import { Alert, Linking, View } from 'react-native';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
-import { useWallet, useWalletKit, useAuth, useWalletStore } from '@demo/wallet-core';
+import { useWallet, useWalletKit, useAuth, useWalletStore, getTransactionExplorerUrls } from '@demo/wallet-core';
 
 import { ActiveTouchAction } from '@/core/components/active-touch-action';
 import { AmountInput } from '@/core/components/amount-input';
@@ -30,7 +30,6 @@ import { fromMinorUnit, toMinorUnit } from '@/core/utils/amount/minor-unit';
 import { useFormattedJetton } from '@/core/hooks/use-formatted-jetton';
 import { getLedgerErrorMessage } from '@/features/ledger';
 import { useAppToasts } from '@/features/toasts';
-import { getTransactionExplorerUrls } from '@/core/utils/explorer-urls';
 
 interface SelectedToken {
     type: 'TON' | 'JETTON';

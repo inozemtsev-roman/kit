@@ -10,11 +10,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isValidAddress } from '@ton/walletkit';
 import type { Jetton, TONTransferRequest } from '@ton/walletkit';
-import { useWallet, useJettons, useWalletKit, useAuth } from '@demo/wallet-core';
+import { useWallet, useJettons, useWalletKit, useAuth, getTransactionExplorerUrls } from '@demo/wallet-core';
 import { toast } from 'sonner';
 
 import { Layout, Button, Input, Card, AnimatedBalance, WalletSwitcher } from '../components';
-import { getTransactionExplorerUrls } from '../utils/explorer-urls';
 import { createComponentLogger } from '../utils/logger';
 
 import { getFormattedJettonInfo } from '@/utils/jetton';

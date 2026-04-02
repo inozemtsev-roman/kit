@@ -15,11 +15,17 @@ import type {
 } from '@ton/walletkit';
 import { getNormalizedExtMessageHash } from '@ton/walletkit';
 import { Address } from '@ton/core';
-import { useWalletKit, useAuth, useWalletStore, useTransactionRequests, getChainNetwork } from '@demo/wallet-core';
+import {
+    useWalletKit,
+    useAuth,
+    useWalletStore,
+    useTransactionRequests,
+    getChainNetwork,
+    getTransactionExplorerUrls,
+} from '@demo/wallet-core';
 import type { SavedWallet, NetworkType } from '@demo/wallet-core';
 import { toast } from 'sonner';
 
-import { getTransactionExplorerUrls } from '../utils/explorer-urls';
 import { Button } from './Button';
 import { Card } from './Card';
 import { DAppInfo } from './DAppInfo';

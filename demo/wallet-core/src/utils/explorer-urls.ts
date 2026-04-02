@@ -6,7 +6,7 @@
  *
  */
 
-import type { NetworkType } from '@demo/wallet-core';
+import type { NetworkType } from './network';
 
 const getPrefix = (network: NetworkType): string => {
     if (network === 'testnet') return 'testnet.';
