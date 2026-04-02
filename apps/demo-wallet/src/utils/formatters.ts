@@ -32,6 +32,7 @@ export const formatTimestamp = (timestampSeconds: number): string => {
 /**
  * Formats TON amount for consistent display (4 decimals).
  * Accepts amount in nanoton (string) or formatted value like "0.001 TON".
+ * TODO - make better function for formatting amounts
  */
 export const formatTonForDisplay = (amountOrValue: string): string => {
     const num =
