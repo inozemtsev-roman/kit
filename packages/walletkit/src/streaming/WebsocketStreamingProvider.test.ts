@@ -132,7 +132,7 @@ describe('WebsocketStreamingProvider', () => {
         await vi.runOnlyPendingTimersAsync();
         const ws = MockWebSocket.lastInstance!;
 
-        provider.triggerClose(); // schedules reconnect at 300ms
+        provider.triggerClose(); // schedules reconnect at 500ms
         provider.disconnect(); // should cancel it
 
         vi.advanceTimersByTime(500);
@@ -145,17 +145,17 @@ describe('WebsocketStreamingProvider', () => {
         await vi.runOnlyPendingTimersAsync();
         const ws1 = MockWebSocket.lastInstance!;
 
-        // First disconnect → attempt 1: 300ms
+        // First disconnect → attempt 1: 500ms
         provider.triggerClose();
-        vi.advanceTimersByTime(299);
+        vi.advanceTimersByTime(499);
         expect(MockWebSocket.lastInstance).toBe(ws1);
         vi.advanceTimersByTime(1);
         const ws2 = MockWebSocket.lastInstance!;
         expect(ws2).not.toBe(ws1);
 
-        // ws2 fails before connecting → attempt 2: 600ms
+        // ws2 fails before connecting → attempt 2: 1000ms
         ws2.onclose?.();
-        vi.advanceTimersByTime(599);
+        vi.advanceTimersByTime(999);
         expect(MockWebSocket.lastInstance).toBe(ws2);
         vi.advanceTimersByTime(1);
         expect(MockWebSocket.lastInstance).not.toBe(ws2);

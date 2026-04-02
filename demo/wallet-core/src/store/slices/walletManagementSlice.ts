@@ -639,7 +639,7 @@ export const createWalletManagementSlice =
                 s.walletManagement.isStreamingConnected = false;
                 s.walletManagement.pendingTransactions = [];
                 s.walletManagement.confirmedTraceIds = [];
-                s.walletManagement.confirmedExternalHashes = [] 
+                s.walletManagement.confirmedExternalHashes = [];
             });
             log.info('WebSocket streaming stopped');
         },

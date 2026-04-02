@@ -362,8 +362,8 @@ describe('TonCenterStreamingProvider', () => {
             firstWs.readyState = MockWebSocket.CLOSED;
             firstWs.onclose?.();
 
-            // Advance past reconnect delay (300ms) + connection time (10ms)
-            vi.advanceTimersByTime(400);
+            // Advance past reconnect delay (500ms) + connection time (10ms)
+            vi.advanceTimersByTime(600);
 
             const secondWs = MockWebSocket.lastInstance!;
             expect(secondWs).not.toBe(firstWs);
