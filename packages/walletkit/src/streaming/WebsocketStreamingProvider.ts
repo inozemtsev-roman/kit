@@ -53,6 +53,19 @@ export abstract class WebsocketStreamingProvider implements StreamingProvider {
         return this.balanceCallbacks.size > 0 || this.transactionCallbacks.size > 0 || this.jettonCallbacks.size > 0;
     }
 
+    protected isWatching(type: StreamingWatchType, address: string): boolean {
+        switch (type) {
+            case 'balance':
+                return this.balanceCallbacks.has(address);
+            case 'transactions':
+                return this.transactionCallbacks.has(address);
+            case 'jettons':
+                return this.jettonCallbacks.has(address);
+            default:
+                return false;
+        }
+    }
+
     protected emitBalance(address: string, update: BalanceUpdate): void {
         this.balanceCallbacks.get(address)?.forEach((cb) => cb(update));
     }
@@ -111,6 +124,7 @@ export abstract class WebsocketStreamingProvider implements StreamingProvider {
         }
         this.stopReconnect();
         this.stopPing();
+        this.reconnectAttempts = 0;
         const wasConnected = this.isConnected;
         if (this.ws) {
             this.ws.onclose = null;
@@ -183,7 +197,7 @@ export abstract class WebsocketStreamingProvider implements StreamingProvider {
         this.ws.onmessage = this.onMessage.bind(this);
 
         this.ws.onerror = (error) => {
-            log.error('WebSocket error', { error });
+            log.error('WebSocket error', { readyState: this.ws?.readyState, error });
         };
 
         this.ws.onclose = () => {
@@ -249,7 +263,7 @@ export abstract class WebsocketStreamingProvider implements StreamingProvider {
     }
 
     /**
-     * Override to determine the ping payload sent every 15s.
+     * Override to determine the ping payload sent every 10s.
      * If returns null, no ping is sent.
      */
     protected getPingMessage(): unknown | null {

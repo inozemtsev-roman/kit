@@ -46,6 +46,7 @@ export class StreamingManager<E extends StreamingEvents = StreamingEvents> imple
         if (this.providers.has(networkId)) {
             log.warn(`Provider for network ${networkId} is already registered. Overriding.`);
             this.providerConnectionUnsubs.get(networkId)?.();
+            this.providers.get(networkId)?.disconnect();
         }
 
         this.providers.set(networkId, provider);
