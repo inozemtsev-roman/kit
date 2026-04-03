@@ -121,6 +121,7 @@ export interface WalletKitConfig {
     disableNetworkSend?: boolean;
     disableManifestDomainCheck?: boolean;
     bridgeUrl?: string;
+    tonApiProvider?: 'tonapi' | 'toncenter';
     tonApiKeyMainnet?: string;
     tonApiKeyTestnet?: string;
     tonApiKeyTetra?: string;

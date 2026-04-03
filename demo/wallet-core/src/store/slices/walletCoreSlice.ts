@@ -12,6 +12,8 @@ import {
     createDeviceInfo,
     createWalletManifest,
     ApiClientTonApi,
+    createTonApiStreamingProvider,
+    ApiClientToncenter,
     createTonCenterStreamingProvider,
 } from '@ton/walletkit';
 import type { ITonWalletKit } from '@ton/walletkit';
@@ -44,22 +46,40 @@ function createWalletKitInstance(walletKitConfig?: WalletKitConfig): ITonWalletK
 
         networks: {
             [Network.mainnet().chainId]: {
-                apiClient: {
-                    url: 'https://toncenter.com',
-                    key: walletKitConfig?.tonApiKeyMainnet,
-                },
+                apiClient:
+                    walletKitConfig?.tonApiProvider === 'tonapi'
+                        ? new ApiClientTonApi({
+                              network: Network.mainnet(),
+                              apiKey: walletKitConfig?.tonApiKeyMainnet,
+                          })
+                        : new ApiClientToncenter({
+                              network: Network.mainnet(),
+                              apiKey: walletKitConfig?.tonApiKeyMainnet,
+                          }),
             },
             [Network.testnet().chainId]: {
-                apiClient: {
-                    url: 'https://testnet.toncenter.com',
-                    key: walletKitConfig?.tonApiKeyTestnet,
-                },
+                apiClient:
+                    walletKitConfig?.tonApiProvider === 'tonapi'
+                        ? new ApiClientTonApi({
+                              network: Network.testnet(),
+                              apiKey: walletKitConfig?.tonApiKeyTestnet,
+                          })
+                        : new ApiClientToncenter({
+                              network: Network.testnet(),
+                              apiKey: walletKitConfig?.tonApiKeyTestnet,
+                          }),
             },
             [Network.tetra().chainId]: {
-                apiClient: new ApiClientTonApi({
-                    network: Network.tetra(),
-                    apiKey: walletKitConfig?.tonApiKeyTetra,
-                }),
+                apiClient:
+                    walletKitConfig?.tonApiProvider === 'tonapi'
+                        ? new ApiClientTonApi({
+                              network: Network.tetra(),
+                              apiKey: walletKitConfig?.tonApiKeyTetra,
+                          })
+                        : new ApiClientToncenter({
+                              network: Network.tetra(),
+                              apiKey: walletKitConfig?.tonApiKeyTetra,
+                          }),
             },
         },
 
@@ -82,11 +102,13 @@ function createWalletKitInstance(walletKitConfig?: WalletKitConfig): ITonWalletK
 
     walletKit.swap.registerProvider(new OmnistonSwapProvider());
 
+    const streamingProvider =
+        walletKitConfig?.tonApiProvider === 'tonapi' ? createTonApiStreamingProvider : createTonCenterStreamingProvider;
     walletKit.streaming.registerProvider(
-        createTonCenterStreamingProvider({ network: Network.mainnet(), apiKey: walletKitConfig?.tonApiKeyMainnet }),
+        streamingProvider({ network: Network.mainnet(), apiKey: walletKitConfig?.tonApiKeyMainnet }),
     );
     walletKit.streaming.registerProvider(
-        createTonCenterStreamingProvider({ network: Network.testnet(), apiKey: walletKitConfig?.tonApiKeyTestnet }),
+        streamingProvider({ network: Network.testnet(), apiKey: walletKitConfig?.tonApiKeyTestnet }),
     );
     walletKit.staking.registerProvider(createTonstakersProvider());
 

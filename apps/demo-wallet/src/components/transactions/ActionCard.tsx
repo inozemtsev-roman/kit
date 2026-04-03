@@ -35,13 +35,13 @@ const JETTON_TRANSFER_DESC = /^Transferring (.+)$/;
 
 function isOutgoingFromAction(action: Action, myAddress: string): boolean {
     if (action.type === 'TonTransfer' && 'TonTransfer' in action) {
-        return sameAddress(action.TonTransfer.sender.address, myAddress);
+        return sameAddress(action.TonTransfer?.sender?.address, myAddress);
     }
     if (action.type === 'JettonTransfer' && 'JettonTransfer' in action) {
-        return sameAddress(action.JettonTransfer.sender.address, myAddress);
+        return sameAddress(action.JettonTransfer?.sender?.address, myAddress);
     }
     if (action.type === 'NftItemTransfer' && 'NftItemTransfer' in action) {
-        return sameAddress(action.NftItemTransfer.sender.address, myAddress);
+        return sameAddress(action.NftItemTransfer?.sender?.address, myAddress);
     }
     const accounts = action.simplePreview?.accounts;
     return accounts != null && accounts.length > 0 && sameAddress(accounts[0].address, myAddress);
