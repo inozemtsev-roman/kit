@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm generate-openapi-spec:*)",
+      "Bash(node src/api/scripts/generate-json-schema.js:*)",
+      "Bash(node:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm turbo generate-openapi-spec:*)",
+      "Bash(swift build:*)",
+      "Bash(grep -r \"classname\\\\|name\\\\|enumName\" /tmp/openapi-swift5-templates/*.mustache)",
+      "Bash(python3 -c \":*)",
+      "Bash(for f in TONMyModel TONTest TONTestWithMessage TONTestWithNumber)",
+      "Bash(do echo \"=== $f.swift ===\" cat \"/tmp/test-swift-output/TONWalletKitAPIModels/Classes/OpenAPIs/Models/$f.swift\")",
+      "Bash(done)",
+      "Bash(xxd /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Sources/TONWalletKit/API/Models/WalletKit/TONSignDataPreview.swift)",
+      "Bash(xxd /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Sources/TONWalletKit/API/Models/WalletKit/TONConnectionApprovalProof.swift)",
+      "Bash(xxd /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Scripts/generate-api/templates/modelObject.mustache)",
+      "Bash(xxd /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Scripts/generate-api/templates/modelAllOf.mustache)",
+      "Bash(xxd /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Scripts/generate-api/templates/model.mustache)",
+      "Bash(xxd /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Scripts/generate-api/templates/modelDiscriminatedEnum.mustache)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d[''definitions''].get\\(''TestWithNumber'', {}\\), indent=2\\)\\)\")",
+      "Bash(xargs cat)",
+      "Bash(ls /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit/src/api/models/core/*.ts)",
+      "Bash(ls /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit/src/api/models/bridge/*.ts)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)[''components''][''schemas'']; [print\\(json.dumps\\({k:d[k]},indent=2\\)\\) for k in d if ''SignatureDomain'' in k]\")",
+      "Bash(bash Scripts/generate-api/generate-api-models.sh /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit)",
+      "Bash(ls /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Sources/TONWalletKit/API/Models/WalletKit/TONSignatureDomain*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)[''components''][''schemas'']; [print\\(k\\) for k in sorted\\(d.keys\\(\\)\\) if ''Omniston'' in k]\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)[''components''][''schemas'']; print\\(json.dumps\\({k:d[k] for k in d if ''Omniston'' in k}, indent=2\\)\\)\")",
+      "Bash(ls /Volumes/Neverland/Development/iOS/walletkit-ios/kit-ios/Sources/TONWalletKit/API/Models/WalletKit/TONOmniston*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\).get\\(''definitions'',{}\\); print\\(json.dumps\\({k:d[k] for k in d if ''OmnistonProvider'' in k}, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\(''/tmp/test-schema.json''\\)\\)[''definitions'']; print\\(json.dumps\\({k:d[k] for k in d if ''OmnistonProvider'' in k}, indent=2\\)\\)\")",
+      "Bash(openapi-generator generate -i /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit/src/api/scripts/generated/walletkit-openapi.json -g swift5 -o /tmp/test-openapi-out -c Scripts/generate-api/generate-api-models-config.json -t Scripts/generate-api/templates)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\)[''components''][''schemas'']; print\\(json.dumps\\(d.get\\(''OmnistonProviderOptions''\\), indent=2\\)\\)\")",
+      "Bash(openapi-generator generate -i /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit/src/api/scripts/generated/walletkit-openapi.json -g swift5 -o /tmp/test-openapi-out2 -c Scripts/generate-api/generate-api-models-config.json -t Scripts/generate-api/templates)",
+      "Bash(openapi-generator generate -i /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit/src/api/scripts/generated/walletkit-openapi.json -g swift5 -o /tmp/test-openapi-out3 -c Scripts/generate-api/generate-api-models-config.json -t Scripts/generate-api/templates)",
+      "Bash(openapi-generator generate -i /Volumes/Neverland/Development/iOS/ton/kit/packages/walletkit/src/api/scripts/generated/walletkit-openapi.json -g swift5 -o /tmp/test-openapi-out4 -c Scripts/generate-api/generate-api-models-config.json -t Scripts/generate-api/templates)",
+      "Bash(grep -E \"\\\\.\\(js|sh|ts\\)$\")"
+    ]
+  }
+}
