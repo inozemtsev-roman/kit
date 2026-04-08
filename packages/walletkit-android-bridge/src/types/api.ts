@@ -18,7 +18,10 @@ import type {
     NFT,
     NFTsResponse,
     SendTransactionResponse,
+    StreamingWatchType,
     TONConnectSession,
+    TonApiStreamingProviderConfig,
+    TonCenterStreamingProviderConfig,
     Transaction,
     TransactionEmulatedPreview,
     TransactionRequest,
@@ -261,6 +264,36 @@ export interface EmitBrowserBridgeRequestArgs {
     request: string;
 }
 
+export interface CreateTonCenterStreamingProviderArgs {
+    config: TonCenterStreamingProviderConfig;
+}
+
+export interface CreateTonApiStreamingProviderArgs {
+    config: TonApiStreamingProviderConfig;
+}
+
+export interface RegisterStreamingProviderArgs {
+    providerId: string;
+}
+
+export interface StreamingHasProviderArgs {
+    network: { chainId: string };
+}
+
+export interface StreamingWatchArgs {
+    network: { chainId: string };
+    address: string;
+    types: StreamingWatchType[];
+}
+
+export interface StreamingUnwatchArgs {
+    subscriptionId: string;
+}
+
+export interface StreamingWatchConnectionChangeArgs {
+    network: { chainId: string };
+}
+
 export interface HandleTonConnectUrlArgs {
     url: string;
 }
@@ -317,4 +350,13 @@ export interface WalletKitBridgeApi {
     emitBrowserPageFinished(args: EmitBrowserPageArgs): PromiseOrValue<{ success: boolean }>;
     emitBrowserError(args: EmitBrowserErrorArgs): PromiseOrValue<{ success: boolean }>;
     emitBrowserBridgeRequest(args: EmitBrowserBridgeRequestArgs): PromiseOrValue<{ success: boolean }>;
+    createTonCenterStreamingProvider(args: CreateTonCenterStreamingProviderArgs): PromiseOrValue<{ providerId: string }>;
+    createTonApiStreamingProvider(args: CreateTonApiStreamingProviderArgs): PromiseOrValue<{ providerId: string }>;
+    registerStreamingProvider(args: RegisterStreamingProviderArgs): PromiseOrValue<void>;
+    streamingHasProvider(args: StreamingHasProviderArgs): PromiseOrValue<{ hasProvider: boolean }>;
+    streamingWatch(args: StreamingWatchArgs): PromiseOrValue<{ subscriptionId: string }>;
+    streamingUnwatch(args: StreamingUnwatchArgs): PromiseOrValue<void>;
+    streamingConnect(): PromiseOrValue<void>;
+    streamingDisconnect(): PromiseOrValue<void>;
+    streamingWatchConnectionChange(args: StreamingWatchConnectionChangeArgs): PromiseOrValue<{ subscriptionId: string }>;
 }

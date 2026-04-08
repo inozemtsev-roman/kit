@@ -19,11 +19,12 @@ import * as tonconnect from './tonconnect';
 import * as nft from './nft';
 import * as jettons from './jettons';
 import * as browser from './browser';
+import * as streaming from './streaming';
 import { eventListeners } from './eventListeners';
 
 export { eventListeners };
 
-export const api: WalletKitBridgeApi = {
+export const api = {
     // Initialization
     init: initialization.init,
     setEventsListeners: initialization.setEventsListeners,
@@ -90,4 +91,15 @@ export const api: WalletKitBridgeApi = {
     emitBrowserPageFinished: browser.emitBrowserPageFinished,
     emitBrowserError: browser.emitBrowserError,
     emitBrowserBridgeRequest: browser.emitBrowserBridgeRequest,
+
+    // Streaming
+    createTonCenterStreamingProvider: streaming.createTonCenterStreamingProvider,
+    createTonApiStreamingProvider: streaming.createTonApiStreamingProvider,
+    registerStreamingProvider: streaming.registerStreamingProvider,
+    streamingHasProvider: streaming.streamingHasProvider,
+    streamingWatch: streaming.streamingWatch,
+    streamingUnwatch: streaming.streamingUnwatch,
+    streamingConnect: streaming.streamingConnect,
+    streamingDisconnect: streaming.streamingDisconnect,
+    streamingWatchConnectionChange: streaming.streamingWatchConnectionChange,
 } as unknown as WalletKitBridgeApi;

@@ -20,6 +20,8 @@ export type WalletKitBridgeEventType =
     | 'browserPageFinished'
     | 'browserError'
     | 'browserBridgeRequest'
+    | 'streamingUpdate'
+    | 'streamingConnectionChange'
     | (string & {});
 
 export interface WalletKitBridgeEvent<T = unknown> {
