@@ -25,10 +25,6 @@ import { bridgeRequest } from '../transport/nativeBridge';
 import { getKit } from '../utils/bridge';
 import { get, release, retain, retainWithId } from '../utils/registry';
 
-/**
- * Callbacks from active Kotlin-provider subscriptions, keyed by subId.
- * Populated by ProxyStreamingProvider.watch(); consumed by kotlinProviderDispatch.
- */
 const kotlinSubCallbacks = new Map<string, (update: unknown) => void>();
 const kotlinProviderSubs = new Map<string, Set<string>>();
 
@@ -73,11 +69,6 @@ function cleanupReplacedKotlinProvider(instance: { streaming: unknown }, nextPro
     release(previousProvider.providerId);
 }
 
-/**
- * Proxy that wraps a Kotlin-implemented ITONStreamingProvider.
- * JS streaming manager interacts with it normally; all calls are forwarded
- * to Kotlin via reverse-RPC (bridgeRequest). Updates flow back via kotlinProviderDispatch.
- */
 class ProxyStreamingProvider implements StreamingProvider {
     readonly type = 'streaming' as const;
     readonly network: Network;
@@ -237,10 +228,6 @@ export async function streamingWatchJettons(args: { network: { chainId: string }
     return { subscriptionId };
 }
 
-/**
- * Called by Kotlin when a Kotlin-implemented streaming provider registers itself.
- * Creates a ProxyStreamingProvider and registers it with the JS streaming manager.
- */
 export async function registerKotlinStreamingProvider(args: { providerId: string; network: { chainId: string } }) {
     const instance = await getKit();
     cleanupReplacedKotlinProvider(instance, args.providerId, args.network);
@@ -249,10 +236,6 @@ export async function registerKotlinStreamingProvider(args: { providerId: string
     instance.streaming.registerProvider(() => provider);
 }
 
-/**
- * Called by Kotlin to deliver an update from a Kotlin-implemented streaming provider.
- * Routes the update to the stored callback for the given subscriptionId.
- */
 export async function kotlinProviderDispatch(args: { subId: string; updateJson: string }) {
     const callback = kotlinSubCallbacks.get(args.subId);
     if (callback) {
