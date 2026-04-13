@@ -20,6 +20,7 @@ import * as nft from './nft';
 import * as jettons from './jettons';
 import * as staking from './staking';
 import * as browser from './browser';
+import * as swap from './swap';
 import { eventListeners } from './eventListeners';
 
 export { eventListeners };
@@ -101,4 +102,14 @@ export const api: WalletKitBridgeApi = {
     getStakedBalance: staking.getStakedBalance,
     getStakingProviderInfo: staking.getStakingProviderInfo,
     getSupportedUnstakeModes: staking.getSupportedUnstakeModes,
+
+    // Swap
+    createOmnistonSwapProvider: swap.createOmnistonSwapProvider,
+    createDeDustSwapProvider: swap.createDeDustSwapProvider,
+    registerSwapProvider: swap.registerSwapProvider,
+    setDefaultSwapProvider: swap.setDefaultSwapProvider,
+    getRegisteredSwapProviders: swap.getRegisteredSwapProviders,
+    hasSwapProvider: swap.hasSwapProvider,
+    getSwapQuote: swap.getSwapQuote,
+    buildSwapTransaction: swap.buildSwapTransaction,
 } as unknown as WalletKitBridgeApi;

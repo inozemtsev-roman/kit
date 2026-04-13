@@ -56,14 +56,10 @@ export interface CreateTonMnemonicArgs {
 export interface CreateSignerFromMnemonicArgs {
     mnemonic: string[];
     mnemonicType?: string;
-    /** Optional signature domain for L2 chains (e.g. Tetra). */
-    domain?: { type: 'l2'; globalId: number } | { type: 'empty' };
 }
 
 export interface CreateSignerFromPrivateKeyArgs {
     secretKey: string;
-    /** Optional signature domain for L2 chains (e.g. Tetra). */
-    domain?: { type: 'l2'; globalId: number } | { type: 'empty' };
 }
 
 export interface CreateSignerFromCustomArgs {
@@ -76,6 +72,8 @@ export interface CreateWalletAdapterArgs {
     network: { chainId: string };
     workchain?: number;
     walletId?: number;
+    /** Optional signature domain for L2 chains (e.g. Tetra). */
+    domain?: { type: 'l2'; globalId: number } | { type: 'empty' };
 }
 
 export interface AddWalletArgs {
@@ -330,6 +328,35 @@ export interface GetSupportedUnstakeModesArgs {
     providerId?: string;
 }
 
+export interface CreateOmnistonSwapProviderArgs {
+    config?: Record<string, unknown>;
+}
+
+export interface CreateDeDustSwapProviderArgs {
+    config?: Record<string, unknown>;
+}
+
+export interface RegisterSwapProviderArgs {
+    providerId: string;
+}
+
+export interface GetSwapQuoteArgs {
+    params: Record<string, unknown>;
+    providerId?: string;
+}
+
+export interface SetDefaultSwapProviderArgs {
+    providerId: string;
+}
+
+export interface HasSwapProviderArgs {
+    providerId: string;
+}
+
+export interface BuildSwapTransactionArgs {
+    params: Record<string, unknown>;
+}
+
 export interface WalletKitBridgeApi {
     init(config?: WalletKitBridgeInitConfig): PromiseOrValue<{ ok: true }>;
     setEventsListeners(args?: SetEventsListenersArgs): PromiseOrValue<{ ok: true }>;
@@ -398,4 +425,14 @@ export interface WalletKitBridgeApi {
         providerId: string;
     }>;
     getSupportedUnstakeModes(args: GetSupportedUnstakeModesArgs): PromiseOrValue<string[]>;
+
+    // Swap
+    createOmnistonSwapProvider(args: CreateOmnistonSwapProviderArgs): PromiseOrValue<{ providerId: string }>;
+    createDeDustSwapProvider(args: CreateDeDustSwapProviderArgs): PromiseOrValue<{ providerId: string }>;
+    registerSwapProvider(args: RegisterSwapProviderArgs): PromiseOrValue<void>;
+    setDefaultSwapProvider(args: SetDefaultSwapProviderArgs): PromiseOrValue<void>;
+    getRegisteredSwapProviders(): PromiseOrValue<{ providerIds: string[] }>;
+    hasSwapProvider(args: HasSwapProviderArgs): PromiseOrValue<{ result: boolean }>;
+    getSwapQuote(args: GetSwapQuoteArgs): PromiseOrValue<unknown>;
+    buildSwapTransaction(args: BuildSwapTransactionArgs): PromiseOrValue<unknown>;
 }
