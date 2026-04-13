@@ -18,6 +18,7 @@ import * as requests from './requests';
 import * as tonconnect from './tonconnect';
 import * as nft from './nft';
 import * as jettons from './jettons';
+import * as staking from './staking';
 import * as browser from './browser';
 import * as swap from './swap';
 import { eventListeners } from './eventListeners';
@@ -91,6 +92,16 @@ export const api: WalletKitBridgeApi = {
     emitBrowserPageFinished: browser.emitBrowserPageFinished,
     emitBrowserError: browser.emitBrowserError,
     emitBrowserBridgeRequest: browser.emitBrowserBridgeRequest,
+
+    // Staking
+    createTonStakersStakingProvider: staking.createTonStakersStakingProvider,
+    registerStakingProvider: staking.registerStakingProvider,
+    setDefaultStakingProvider: staking.setDefaultStakingProvider,
+    getStakingQuote: staking.getStakingQuote,
+    buildStakeTransaction: staking.buildStakeTransaction,
+    getStakedBalance: staking.getStakedBalance,
+    getStakingProviderInfo: staking.getStakingProviderInfo,
+    getSupportedUnstakeModes: staking.getSupportedUnstakeModes,
 
     // Swap
     createOmnistonSwapProvider: swap.createOmnistonSwapProvider,

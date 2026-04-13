@@ -121,7 +121,7 @@ export interface CreateTransferMultiTonTransactionArgs {
 
 export interface TransactionContentArgs {
     walletId: string;
-    transactionContent: TransactionRequest | string; // Can be object (from Kotlin) or string (legacy)
+    transactionContent: TransactionRequest;
 }
 
 export interface TonConnectRequestEvent extends BridgeEvent {
@@ -263,6 +263,71 @@ export interface HandleTonConnectUrlArgs {
     url: string;
 }
 
+export interface TonStakersChainConfig {
+    contractAddress?: string;
+    tonApiToken?: string;
+}
+
+export interface CreateTonStakersStakingProviderArgs {
+    config?: {
+        mainnet?: TonStakersChainConfig;
+        testnet?: TonStakersChainConfig;
+    };
+}
+
+export interface RegisterStakingProviderArgs {
+    providerId: string;
+}
+
+export interface SetDefaultStakingProviderArgs {
+    providerId: string;
+}
+
+export interface GetStakingQuoteArgs {
+    direction: 'stake' | 'unstake';
+    amount: string;
+    userAddress?: string;
+    network?: { chainId: string };
+    unstakeMode?: string;
+    providerOptions?: unknown;
+    providerId?: string;
+}
+
+export interface BuildStakeTransactionArgs {
+    quote: StakingQuoteResponse;
+    userAddress: string;
+    providerOptions?: unknown;
+    providerId?: string;
+}
+
+export interface StakingQuoteResponse {
+    direction: 'stake' | 'unstake';
+    amountIn: string;
+    amountOut: string;
+    network: { chainId: string };
+    providerId: string;
+    apy?: number;
+    unstakeMode?: string;
+    estimatedUnstakeDelayHours?: number;
+    instantUnstakeAvailable?: string;
+    metadata?: unknown;
+}
+
+export interface GetStakedBalanceArgs {
+    userAddress: string;
+    network?: { chainId: string };
+    providerId?: string;
+}
+
+export interface GetStakingProviderInfoArgs {
+    network?: { chainId: string };
+    providerId?: string;
+}
+
+export interface GetSupportedUnstakeModesArgs {
+    providerId?: string;
+}
+
 export interface CreateOmnistonSwapProviderArgs {
     config?: Record<string, unknown>;
 }
@@ -321,7 +386,7 @@ export interface WalletKitBridgeApi {
     createTransferTonTransaction(args: CreateTransferTonTransactionArgs): PromiseOrValue<TransactionRequest>;
     createTransferMultiTonTransaction(args: CreateTransferMultiTonTransactionArgs): PromiseOrValue<TransactionRequest>;
     getTransactionPreview(args: TransactionContentArgs): PromiseOrValue<TransactionEmulatedPreview>;
-    handleNewTransaction(args: TransactionContentArgs): PromiseOrValue<{ success: boolean }>;
+    handleNewTransaction(args: TransactionContentArgs): PromiseOrValue<void>;
     sendTransaction(args: TransactionContentArgs): PromiseOrValue<SendTransactionResponse>;
     approveConnectRequest(args: ApproveConnectRequestArgs): PromiseOrValue<void>;
     rejectConnectRequest(args: RejectConnectRequestArgs): PromiseOrValue<{ success: boolean }>;
@@ -344,6 +409,22 @@ export interface WalletKitBridgeApi {
     emitBrowserPageFinished(args: EmitBrowserPageArgs): PromiseOrValue<{ success: boolean }>;
     emitBrowserError(args: EmitBrowserErrorArgs): PromiseOrValue<{ success: boolean }>;
     emitBrowserBridgeRequest(args: EmitBrowserBridgeRequestArgs): PromiseOrValue<{ success: boolean }>;
+    createTonStakersStakingProvider(args?: CreateTonStakersStakingProviderArgs): PromiseOrValue<{ providerId: string }>;
+    registerStakingProvider(args: RegisterStakingProviderArgs): PromiseOrValue<void>;
+    setDefaultStakingProvider(args: SetDefaultStakingProviderArgs): PromiseOrValue<void>;
+    getStakingQuote(args: GetStakingQuoteArgs): PromiseOrValue<StakingQuoteResponse>;
+    buildStakeTransaction(args: BuildStakeTransactionArgs): PromiseOrValue<unknown>;
+    getStakedBalance(args: GetStakedBalanceArgs): PromiseOrValue<{
+        stakedBalance: string;
+        instantUnstakeAvailable: string;
+        providerId: string;
+    }>;
+    getStakingProviderInfo(args: GetStakingProviderInfoArgs): PromiseOrValue<{
+        apy: number;
+        instantUnstakeAvailable?: string;
+        providerId: string;
+    }>;
+    getSupportedUnstakeModes(args: GetSupportedUnstakeModesArgs): PromiseOrValue<string[]>;
 
     // Swap
     createOmnistonSwapProvider(args: CreateOmnistonSwapProviderArgs): PromiseOrValue<{ providerId: string }>;
