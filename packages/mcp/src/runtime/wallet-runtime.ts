@@ -16,7 +16,7 @@ import {
     WalletV4R2Adapter,
     WalletV5R1Adapter,
 } from '@ton/walletkit';
-import type { TonWalletKit as TonWalletKitType, Wallet, WalletAdapter, WalletSigner } from '@ton/walletkit';
+import type { ApiClient, TonWalletKit as TonWalletKitType, Wallet, WalletAdapter, WalletSigner } from '@ton/walletkit';
 
 import { AgenticWalletAdapter } from '../contracts/agentic_wallet/AgenticWalletAdapter.js';
 import type { IContactResolver } from '../types/contacts.js';
@@ -139,6 +139,23 @@ async function createServiceFromStoredStandard(
     }
 }
 
+async function fetchWalletNftIndex(client: ApiClient, address: string): Promise<bigint | undefined> {
+    try {
+        const data = await client.runGetMethod(address, 'get_subwallet_id');
+        if (data.exitCode !== 0 || !Array.isArray(data.stack) || data.stack.length === 0) {
+            return undefined;
+        }
+        const top = data.stack[0] as { type?: string; value?: string };
+        if (top.type !== 'num' || typeof top.value !== 'string') {
+            return undefined;
+        }
+        const v = top.value.trim();
+        return v.startsWith('-') ? -BigInt(v.slice(1)) : BigInt(v);
+    } catch {
+        return undefined;
+    }
+}
+
 async function createServiceFromStoredAgentic(
     wallet: StoredAgenticWallet,
     contacts: IContactResolver | undefined,
@@ -154,10 +171,18 @@ async function createServiceFromStoredAgentic(
     const kit = createKit(wallet.network, toncenterApiKey);
     await kit.waitForReady();
     try {
+        const client = kit.getApiClient(getKitNetwork(wallet.network));
+        const collectionAddress = wallet.collection_address;
+        let walletNftIndex: bigint | undefined;
+        if (collectionAddress) {
+            walletNftIndex = await fetchWalletNftIndex(client, wallet.address);
+        }
         const adapter = await AgenticWalletAdapter.create(signer, {
-            client: kit.getApiClient(getKitNetwork(wallet.network)),
+            client,
             network: getKitNetwork(wallet.network),
             walletAddress: wallet.address,
+            walletNftIndex,
+            collectionAddress,
         });
         await addWallet(kit, adapter);
         const service = await McpWalletService.create({
